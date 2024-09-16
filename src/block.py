@@ -35,13 +35,22 @@ class Board(BaseModel):
         for position in self.positions:
             cell = position.cell
             block = position.block
-            for i in range(block.length - 1):
+            for i in range(block.length):
                 if block.orientation == "H":
-                    cells_occupancy[cell.x + i][cell.y] = True
+                    cells_occupancy[cell.y][cell.x + i] = True
                 elif block.orientation == "V":
-                    cells_occupancy[cell.x][cell.y + i] = True
+                    cells_occupancy[cell.y + i][cell.x] = True
 
         self.cells_occupancy = cells_occupancy
+
+    def display_board(self):
+        """cells_occupancy を図示するメソッド"""
+        if self.cells_occupancy is None:
+            print("Board is not initialized. Please call init_occupancy() first.")
+            return
+
+        for row in self.cells_occupancy:
+            print(" ".join("X" if cell else "." for cell in row))
 
 
 N = 6
@@ -68,4 +77,4 @@ init_positions: list[Position] = [
 board = Board(width=N, height=N, goal=goal, positions=init_positions)
 
 board.init_occupancy()
-print(board.cells_occupancy)
+board.display_board()
