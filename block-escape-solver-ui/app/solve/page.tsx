@@ -1,4 +1,3 @@
-// app/solve/page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -20,21 +19,19 @@ const initialBoard = Array(6)
 const Page = () => {
   const [blocks, setBlocks] = useState<Block[]>([]);
   const [blockIdCounter, setBlockIdCounter] = useState(0);
-
   const [blockOrientation, setBlockOrientation] = useState<Orientation>("H");
   const [blockLength, setBlockLength] = useState<number>(2);
   const [isTargetBlock, setIsTargetBlock] = useState<boolean>(false);
   const [selectedPosition, setSelectedPosition] = useState<{ y: number; x: number } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [solution, setSolution] = useState<any[] | null>(null); // ソリューション表示用の状態
 
-  // ブロック作成
   const createBlock = () => {
     if (!selectedPosition) {
       alert("Please select a position on the board to place the block.");
       return;
     }
 
-    // ブロックの範囲が盤面を超えないかチェック
     if (
       (blockOrientation === "H" && selectedPosition.x + blockLength > 6) ||
       (blockOrientation === "V" && selectedPosition.y + blockLength > 6)
@@ -43,7 +40,6 @@ const Page = () => {
       return;
     }
 
-    // 重複ブロックチェック
     for (const block of blocks) {
       if (block.orientation === "H") {
         if (
@@ -64,7 +60,7 @@ const Page = () => {
       }
     }
 
-    setErrorMessage(null); // エラーメッセージリセット
+    setErrorMessage(null);
 
     const newBlock: Block = {
       id: blockIdCounter,
@@ -76,9 +72,45 @@ const Page = () => {
 
     setBlocks((prevBlocks) => [...prevBlocks, newBlock]);
     setBlockIdCounter((prevCounter) => prevCounter + 1);
-    setSelectedPosition(null); // リセット
+    setSelectedPosition(null);
   };
-
+  const solveBoard = async () => {
+    try {
+      const response = await fetch("http://127.0.0.1:8000/solve", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          width: 6,
+          height: 6,
+          goal: { y: 2, x: 5 },
+          positions: blocks.map((block) => ({
+            block: {
+              id: block.id,
+              orientation: block.orientation,
+              length: block.length,
+              is_target: block.isTarget,
+            },
+            cell: {
+              x: block.position.x,
+              y: block.position.y,
+            },
+          })),
+        }),
+      });
+  
+      if (!response.ok) {
+        throw new Error("Network response was not ok");
+      }
+  
+      const data = await response.json();
+      setSolution(data.solution);
+    } catch (error) {
+      setErrorMessage("An error occurred while solving the board.");
+    }
+  };
+  
   return (
     <div>
       <h1>Block Placement</h1>
@@ -150,7 +182,6 @@ const Page = () => {
                           backgroundColor: isTarget ? "lightcoral" : "lightgray",
                           zIndex: 1,
                           pointerEvents: "none",
-                          border: "none", // borderを削除して重複表示を防ぐ
                         }}
                       />
                     );
@@ -164,7 +195,20 @@ const Page = () => {
         </div>
       </div>
       <button onClick={createBlock}>Create Block</button>
+      <button onClick={solveBoard}>Solve</button>
       {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
+      {solution && (
+        <div>
+          <h2>Solution</h2>
+          <ul>
+            {solution.map((move, index) => (
+              <li key={index}>
+                Move block {move.block_id} from ({move.from_cell.x}, {move.from_cell.y}) to ({move.to_cell.x}, {move.to_cell.y})
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 };
