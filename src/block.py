@@ -1,6 +1,9 @@
-from typing import Literal
+from collections import deque
+from typing import Any, Literal
 
 from pydantic import BaseModel
+
+N = 6
 
 
 class Block(BaseModel):
@@ -21,9 +24,10 @@ class Position(BaseModel):
 
 
 class Move(BaseModel):
+    block: Block
     from_cell: Cell
     to_cell: Cell
-    block: Block
+    # TODO: validate moves.
 
 
 class Board(BaseModel):
@@ -33,7 +37,10 @@ class Board(BaseModel):
     positions: list[Position]
     cells_occupancy: list[list[bool]] | None = None
 
-    def init_occupancy(self) -> None:
+    def model_post_init(self, __context: Any) -> None:
+        self._init_occupancy()
+
+    def _init_occupancy(self) -> None:
         cells_occupancy = [
             [False for _ in range(self.width)] for _ in range(self.height)
         ]
@@ -54,8 +61,10 @@ class Board(BaseModel):
             print("Board is not initialized. Please call init_occupancy() first.")
             return
 
+        print("--------------------")
         for row in self.cells_occupancy:
             print(" ".join("X" if cell else "." for cell in row))
+        print("--------------------")
 
     def calculate_available_moves(self) -> list[Move]:
         """移動可能なブロックの最終位置をリストするメソッド"""
@@ -72,6 +81,25 @@ class Board(BaseModel):
 
         return available_moves
 
+    def is_cleared(self) -> bool:
+        """ゲームがクリアされているかどうかを判定するメソッド"""
+        for position in self.positions:
+            if position.block.is_target:
+                cell = position.cell
+                block = position.block
+
+                # ブロックの範囲を計算
+                if block.orientation == "H":
+                    block_cells = [(cell.x + i, cell.y) for i in range(block.length)]
+                elif block.orientation == "V":
+                    block_cells = [(cell.x, cell.y + i) for i in range(block.length)]
+
+                # goalがブロックの範囲内にあるか確認
+                if (self.goal.x, self.goal.y) in block_cells:
+                    return True
+
+        return False
+
     def _get_to_cells(self, cell, block) -> list[Cell]:
         to_cells = []
         if block.orientation == "H":
@@ -84,12 +112,13 @@ class Board(BaseModel):
                 to_cells.append(Cell(y=cell.y, x=left))
 
             # 右に移動可能な最終位置を探す
-            right = cell.x + block.length - 1
+            original_block_right_end = cell.x + block.length - 1
+            right = original_block_right_end
             while (
                 right < self.width - 1 and not self.cells_occupancy[cell.y][right + 1]
             ):
                 right += 1
-            if right > cell.x + block.length - 1:  # もし移動した場合
+            if right > original_block_right_end:  # もし移動した場合
                 to_cells.append(Cell(y=cell.y, x=right - block.length + 1))
 
         elif block.orientation == "V":
@@ -102,41 +131,112 @@ class Board(BaseModel):
                 to_cells.append(Cell(y=top, x=cell.x))
 
             # 下に移動可能な最終位置を探す
-            bottom = cell.y + block.length - 1
+            original_block_bottom_end = cell.y + block.length - 1
+            bottom = original_block_bottom_end
             while (
                 bottom < self.height - 1
                 and not self.cells_occupancy[bottom + 1][cell.x]
             ):
                 bottom += 1
-            if bottom > cell.y + block.length - 1:  # もし移動した場合
+            if bottom > original_block_bottom_end:  # もし移動した場合
                 to_cells.append(Cell(y=bottom - block.length + 1, x=cell.x))
 
         return to_cells
 
 
-N = 6
-goal = Cell(x=5, y=2)
-init_positions: list[Position] = [
-    Position(cell=Cell(y=0, x=0), block=Block(id=1, length=3, orientation="H")),
-    Position(
-        cell=Cell(y=2, x=0),
-        block=Block(id=2, length=2, orientation="H", is_target=True),
-    ),
-    Position(cell=Cell(y=3, x=0), block=Block(id=3, length=2, orientation="V")),
-    Position(cell=Cell(y=5, x=0), block=Block(id=4, length=2, orientation="H")),
-    Position(cell=Cell(y=1, x=1), block=Block(id=5, length=2, orientation="H")),
-    Position(cell=Cell(y=2, x=2), block=Block(id=6, length=2, orientation="V")),
-    Position(cell=Cell(y=4, x=2), block=Block(id=7, length=2, orientation="H")),
-    Position(cell=Cell(y=0, x=3), block=Block(id=8, length=2, orientation="V")),
-    Position(cell=Cell(y=4, x=3), block=Block(id=9, length=2, orientation="H")),
-    Position(cell=Cell(y=0, x=4), block=Block(id=10, length=2, orientation="V")),
-    Position(cell=Cell(y=3, x=4), block=Block(id=11, length=2, orientation="H")),
-    Position(cell=Cell(y=4, x=4), block=Block(id=12, length=2, orientation="H")),
-    Position(cell=Cell(y=0, x=5), block=Block(id=13, length=3, orientation="V")),
-]
+def apply_move(positions: list[Position], move: Move) -> list[Position]:
+    results = []
+    for position in positions:
+        if position.block != move.block:
+            results.append(position)
+        else:
+            results.append(Position(block=position.block, cell=move.to_cell))
+    return results
 
-board = Board(width=N, height=N, goal=goal, positions=init_positions)
 
-board.init_occupancy()
-board.display_board()
-print(board.calculate_available_moves())
+def get_new_board(board: Board, move: Move) -> Board:
+    positions = board.positions
+    new_positions = apply_move(positions=positions, move=move)
+    return Board(
+        width=board.width, height=board.height, goal=board.goal, positions=new_positions
+    )
+
+
+def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
+    # BFS のためのキュー
+    queue = deque([(board, [])])
+    # 訪問済みの状態を管理するセット
+    visited = set()
+    # 現在のボードの状態を保存
+    visited.add(
+        tuple(
+            sorted([(pos.block.id, pos.cell.y, pos.cell.x) for pos in board.positions])
+        )
+    )
+
+    while queue:
+        current_board, moves = queue.popleft()
+        current_board.display_board()
+
+        # ゲームがクリアされているか確認
+        if current_board.is_cleared():
+            return moves
+
+        # 現在のボードから移動可能なすべての移動を計算
+        available_moves = current_board.calculate_available_moves()
+
+        for move in available_moves:
+            new_board = get_new_board(current_board, move)
+            new_positions = new_board.positions
+            # ボードの状態を保存
+            state_tuple = tuple(
+                sorted(
+                    [(pos.block.id, pos.cell.y, pos.cell.x) for pos in new_positions]
+                )
+            )
+
+            if state_tuple not in visited:
+                visited.add(state_tuple)
+                queue.append((new_board, moves + [move]))
+
+    return None
+
+
+if __name__ == "__main__":
+    goal = Cell(x=5, y=2)
+    # init_positions: list[Position] = [
+    #     Position(cell=Cell(y=0, x=0), block=Block(id=1, length=3, orientation="H")),
+    #     Position(
+    #         cell=Cell(y=2, x=0),
+    #         block=Block(id=2, length=2, orientation="H", is_target=True),
+    #     ),
+    #     Position(cell=Cell(y=3, x=0), block=Block(id=3, length=2, orientation="V")),
+    #     Position(cell=Cell(y=5, x=0), block=Block(id=4, length=2, orientation="H")),
+    #     Position(cell=Cell(y=1, x=1), block=Block(id=5, length=2, orientation="H")),
+    #     Position(cell=Cell(y=2, x=2), block=Block(id=6, length=2, orientation="V")),
+    #     Position(cell=Cell(y=4, x=2), block=Block(id=7, length=2, orientation="H")),
+    #     Position(cell=Cell(y=0, x=3), block=Block(id=8, length=2, orientation="V")),
+    #     Position(cell=Cell(y=4, x=3), block=Block(id=9, length=2, orientation="H")),
+    #     Position(cell=Cell(y=0, x=4), block=Block(id=10, length=2, orientation="V")),
+    #     Position(cell=Cell(y=3, x=4), block=Block(id=11, length=2, orientation="H")),
+    #     Position(cell=Cell(y=4, x=4), block=Block(id=12, length=2, orientation="H")),
+    #     Position(cell=Cell(y=0, x=5), block=Block(id=13, length=3, orientation="V")),
+    # ]
+
+    init_positions = [
+        Position(
+            cell=Cell(y=2, x=0),
+            block=Block(id=1, length=2, orientation="H", is_target=True),
+        ),
+        Position(cell=Cell(y=3, x=1), block=Block(id=1, length=2, orientation="V")),
+        Position(cell=Cell(y=4, x=2), block=Block(id=2, length=2, orientation="H")),
+        Position(cell=Cell(y=0, x=4), block=Block(id=3, length=2, orientation="H")),
+        Position(cell=Cell(y=1, x=4), block=Block(id=4, length=2, orientation="V")),
+        Position(cell=Cell(y=3, x=4), block=Block(id=5, length=2, orientation="V")),
+    ]
+
+    board = Board(width=N, height=N, goal=goal, positions=init_positions)
+    board.display_board()
+
+    solution = find_shortest_path_to_clear(board=board)
+    print(solution)
