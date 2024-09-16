@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, Literal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,6 +10,7 @@ from src.util import display_moves
 
 app = FastAPI()
 
+
 # CORSミドルウェアの設定
 app.add_middleware(
     CORSMiddleware,
@@ -18,6 +19,19 @@ app.add_middleware(
     allow_methods=["*"],  # 許可するHTTPメソッドを指定
     allow_headers=["*"],  # 許可するHTTPヘッダーを指定
 )
+DirectionType = Literal["up", "down", "right", "left"]
+
+
+def _get_direction(from_cell: Cell, to_cell: Cell) -> DirectionType:
+    if from_cell.x == to_cell.x and from_cell.y == to_cell.y:
+        raise ValueError("Cells are the same. No direction.")
+
+    if from_cell.x == to_cell.x:
+        return "up" if from_cell.y > to_cell.y else "down"
+    elif from_cell.y == to_cell.y:
+        return "left" if from_cell.x > to_cell.x else "right"
+    else:
+        raise ValueError("Cells are not aligned horizontally or vertically.")
 
 
 # This model should be the same as Board Class.
@@ -31,7 +45,7 @@ class BoardModel(BaseModel):
 # This model should be the same as Move Class.
 class MoveModel(BaseModel):
     from_cell: dict[str, int]
-    to_cell: dict[str, int]
+    direction: DirectionType
     block_id: int
 
 
@@ -60,7 +74,7 @@ async def solve(board_data: BoardModel):
     result = [
         MoveModel(
             from_cell=move.from_cell.model_dump(),
-            to_cell=move.to_cell.model_dump(),
+            direction=_get_direction(from_cell=move.from_cell, to_cell=move.to_cell),
             block_id=move.block.id,
         )
         for move in solution
