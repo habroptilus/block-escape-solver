@@ -25,6 +25,7 @@ const Page = () => {
   const [blockLength, setBlockLength] = useState<number>(2);
   const [isTargetBlock, setIsTargetBlock] = useState<boolean>(false);
   const [selectedPosition, setSelectedPosition] = useState<{ y: number; x: number } | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   // ブロック作成
   const createBlock = () => {
@@ -42,6 +43,29 @@ const Page = () => {
       return;
     }
 
+    // 重複ブロックチェック
+    for (const block of blocks) {
+      if (block.orientation === "H") {
+        if (
+          block.position.y === selectedPosition.y &&
+          !(block.position.x + block.length <= selectedPosition.x || block.position.x >= selectedPosition.x + blockLength)
+        ) {
+          setErrorMessage("Block overlaps with an existing block.");
+          return;
+        }
+      } else if (block.orientation === "V") {
+        if (
+          block.position.x === selectedPosition.x &&
+          !(block.position.y + block.length <= selectedPosition.y || block.position.y >= selectedPosition.y + blockLength)
+        ) {
+          setErrorMessage("Block overlaps with an existing block.");
+          return;
+        }
+      }
+    }
+
+    setErrorMessage(null); // エラーメッセージリセット
+
     const newBlock: Block = {
       id: blockIdCounter,
       orientation: blockOrientation,
@@ -55,82 +79,17 @@ const Page = () => {
     setSelectedPosition(null); // リセット
   };
 
-  // マス目のクリック処理
-  const handleCellClick = (y: number, x: number) => {
-    setSelectedPosition({ y, x });
-  };
-
-  // ブロックが現在のセルに存在するかチェック
-  const isBlockAtPosition = (y: number, x: number) => {
-    for (const block of blocks) {
-      if (block.orientation === "H") {
-        if (block.position.y === y && block.position.x <= x && x < block.position.x + block.length) {
-          return block;
-        }
-      } else if (block.orientation === "V") {
-        if (block.position.x === x && block.position.y <= y && y < block.position.y + block.length) {
-          return block;
-        }
-      }
-    }
-    return null;
-  };
-
-  // ボードの描画
-  const renderBoard = () => {
-    return initialBoard.map((row, y) => (
-      <div key={y} style={{ display: "flex" }}>
-        {row.map((cell, x) => {
-          const block = isBlockAtPosition(y, x);
-          return (
-            <div
-              key={x}
-              onClick={() => handleCellClick(y, x)}
-              style={{
-                width: "50px",
-                height: "50px",
-                border: "1px solid black",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: block
-                  ? block.isTarget
-                    ? "lightcoral"
-                    : "lightgray"
-                  : selectedPosition?.y === y && selectedPosition?.x === x
-                  ? "lightblue"
-                  : "white",
-              }}
-            >
-              {/* ゴールの表示 */}
-              {y === 2 && x === 5 && !block ? "G" : ""}
-            </div>
-          );
-        })}
-      </div>
-    ));
-  };
-
   return (
     <div>
-      <h1>Block Escape Solver</h1>
-      
-      <h2>Board</h2>
-      {renderBoard()}
-
-      <h2>Create Block</h2>
+      <h1>Block Placement</h1>
       <div>
         <label>
           Orientation:
-          <select
-            value={blockOrientation}
-            onChange={(e) => setBlockOrientation(e.target.value as Orientation)}
-          >
+          <select value={blockOrientation} onChange={(e) => setBlockOrientation(e.target.value as Orientation)}>
             <option value="H">Horizontal</option>
             <option value="V">Vertical</option>
           </select>
         </label>
-
         <label>
           Length:
           <select value={blockLength} onChange={(e) => setBlockLength(Number(e.target.value))}>
@@ -138,18 +97,74 @@ const Page = () => {
             <option value={3}>3</option>
           </select>
         </label>
-
         <label>
-          Is Target Block:
-          <input
-            type="checkbox"
-            checked={isTargetBlock}
-            onChange={(e) => setIsTargetBlock(e.target.checked)}
-          />
+          Target:
+          <input type="checkbox" checked={isTargetBlock} onChange={(e) => setIsTargetBlock(e.target.checked)} />
         </label>
-
-        <button onClick={createBlock}>Create Block</button>
       </div>
+      <div>
+        <h2>Select Position</h2>
+        <div
+          style={{
+            position: "relative",
+            display: "grid",
+            gridTemplateColumns: "repeat(6, 40px)",
+            gridTemplateRows: "repeat(6, 40px)",
+          }}
+        >
+          {initialBoard.map((row, rowIndex) =>
+            row.map((_, colIndex) => (
+              <div
+                key={`${rowIndex}-${colIndex}`}
+                onClick={() => setSelectedPosition({ y: rowIndex, x: colIndex })}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  border: "1px solid lightgray",
+                  backgroundColor: selectedPosition?.x === colIndex && selectedPosition?.y === rowIndex ? "lightblue" : "white",
+                  position: "relative",
+                }}
+              >
+                {blocks.map((block) => {
+                  const { orientation, length, isTarget, position } = block;
+                  const blockCells = [];
+                  for (let i = 0; i < length; i++) {
+                    if (orientation === "H") {
+                      blockCells.push({ y: position.y, x: position.x + i });
+                    } else {
+                      blockCells.push({ y: position.y + i, x: position.x });
+                    }
+                  }
+
+                  // 一部のマスのみにブロックが描画されるように修正
+                  if (blockCells.some(cell => cell.y === rowIndex && cell.x === colIndex)) {
+                    return (
+                      <div
+                        key={`${block.id}-${rowIndex}-${colIndex}`}
+                        style={{
+                          position: "absolute",
+                          top: "0",
+                          left: "0",
+                          width: "40px",
+                          height: "40px",
+                          backgroundColor: isTarget ? "lightcoral" : "lightgray",
+                          zIndex: 1,
+                          pointerEvents: "none",
+                          border: "none", // borderを削除して重複表示を防ぐ
+                        }}
+                      />
+                    );
+                  }
+
+                  return null;
+                })}
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      <button onClick={createBlock}>Create Block</button>
+      {errorMessage && <p style={{ color: "red" }}>{errorMessage}</p>}
     </div>
   );
 };
