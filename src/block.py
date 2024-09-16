@@ -11,8 +11,8 @@ class Block(BaseModel):
 
 
 class Cell(BaseModel):
-    x: int
     y: int
+    x: int
 
 
 class Position(BaseModel):
@@ -44,7 +44,6 @@ class Board(BaseModel):
         self.cells_occupancy = cells_occupancy
 
     def display_board(self):
-        """cells_occupancy を図示するメソッド"""
         if self.cells_occupancy is None:
             print("Board is not initialized. Please call init_occupancy() first.")
             return
@@ -56,22 +55,22 @@ class Board(BaseModel):
 N = 6
 goal = Cell(x=5, y=2)
 init_positions: list[Position] = [
-    Position(cell=Cell(x=0, y=0), block=Block(id=1, length=3, orientation="H")),
+    Position(cell=Cell(y=0, x=0), block=Block(id=1, length=3, orientation="H")),
     Position(
-        cell=Cell(x=0, y=2),
+        cell=Cell(y=2, x=0),
         block=Block(id=2, length=2, orientation="H", is_target=True),
     ),
-    Position(cell=Cell(x=0, y=3), block=Block(id=3, length=2, orientation="V")),
-    Position(cell=Cell(x=0, y=5), block=Block(id=4, length=2, orientation="H")),
-    Position(cell=Cell(x=1, y=1), block=Block(id=5, length=2, orientation="H")),
-    Position(cell=Cell(x=2, y=2), block=Block(id=6, length=2, orientation="V")),
-    Position(cell=Cell(x=2, y=4), block=Block(id=7, length=2, orientation="H")),
-    Position(cell=Cell(x=3, y=2), block=Block(id=8, length=2, orientation="V")),
-    Position(cell=Cell(x=3, y=4), block=Block(id=9, length=2, orientation="H")),
-    Position(cell=Cell(x=4, y=0), block=Block(id=10, length=2, orientation="V")),
-    Position(cell=Cell(x=4, y=3), block=Block(id=11, length=2, orientation="H")),
-    Position(cell=Cell(x=4, y=4), block=Block(id=12, length=2, orientation="H")),
-    Position(cell=Cell(x=5, y=0), block=Block(id=13, length=3, orientation="V")),
+    Position(cell=Cell(y=3, x=0), block=Block(id=3, length=2, orientation="V")),
+    Position(cell=Cell(y=5, x=0), block=Block(id=4, length=2, orientation="H")),
+    Position(cell=Cell(y=1, x=1), block=Block(id=5, length=2, orientation="H")),
+    Position(cell=Cell(y=2, x=2), block=Block(id=6, length=2, orientation="V")),
+    Position(cell=Cell(y=4, x=2), block=Block(id=7, length=2, orientation="H")),
+    Position(cell=Cell(y=2, x=3), block=Block(id=8, length=2, orientation="V")),
+    Position(cell=Cell(y=4, x=3), block=Block(id=9, length=2, orientation="H")),
+    Position(cell=Cell(y=0, x=4), block=Block(id=10, length=2, orientation="V")),
+    Position(cell=Cell(y=3, x=4), block=Block(id=11, length=2, orientation="H")),
+    Position(cell=Cell(y=4, x=4), block=Block(id=12, length=2, orientation="H")),
+    Position(cell=Cell(y=0, x=5), block=Block(id=13, length=3, orientation="V")),
 ]
 
 board = Board(width=N, height=N, goal=goal, positions=init_positions)
