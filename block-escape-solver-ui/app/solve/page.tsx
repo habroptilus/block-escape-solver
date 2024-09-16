@@ -13,6 +13,55 @@ interface Block {
   position: { y: number; x: number };
 }
 
+type Position = {
+  x: number;
+  y: number;
+};
+
+const isOverlapping = (
+  block: Block,
+  selectedPosition: Position,
+  blockLength: number,
+  orientation: 'H' | 'V',
+  is_target_block: boolean
+): boolean => {
+  const selectedBlock: Block = {
+    id: 1000, // dummy
+    position: selectedPosition,
+    length: blockLength,
+    orientation: orientation,
+    isTarget: is_target_block
+  };
+
+  const getBlockRange = (block: Block) => {
+    const { x, y } = block.position;
+    const length = block.length;
+    if (block.orientation === 'H') {
+      return {
+        left: x,
+        right: x + length,
+        top: y,
+        bottom: y + 1, // 1行分の高さ
+      };
+    } else {
+      return {
+        left: x,
+        right: x + 1, // 1列分の幅
+        top: y,
+        bottom: y + length,
+      };
+    }
+  };
+
+  const blockRange = getBlockRange(block);
+  const selectedBlockRange = getBlockRange(selectedBlock);
+
+  return !(blockRange.right <= selectedBlockRange.left || 
+           blockRange.left >= selectedBlockRange.right || 
+           blockRange.bottom <= selectedBlockRange.top || 
+           blockRange.top >= selectedBlockRange.bottom);
+};
+
 const initialBoard = Array(6)
   .fill(null)
   .map(() => Array(6).fill(null));
@@ -41,22 +90,9 @@ const Page = () => {
     }
 
     for (const block of blocks) {
-      if (block.orientation === "H") {
-        if (
-          block.position.y === selectedPosition.y &&
-          !(block.position.x + block.length <= selectedPosition.x || block.position.x >= selectedPosition.x + blockLength)
-        ) {
-          setErrorMessage("Block overlaps with an existing block.");
-          return;
-        }
-      } else if (block.orientation === "V") {
-        if (
-          block.position.x === selectedPosition.x &&
-          !(block.position.y + block.length <= selectedPosition.y || block.position.y >= selectedPosition.y + blockLength)
-        ) {
-          setErrorMessage("Block overlaps with an existing block.");
-          return;
-        }
+      if (isOverlapping(block, selectedPosition,  blockLength, blockOrientation, isTargetBlock,)) {
+        setErrorMessage("Block overlaps with an existing block.");
+        return;
       }
     }
 

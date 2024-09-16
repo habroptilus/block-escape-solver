@@ -52,7 +52,6 @@ class MoveModel(BaseModel):
 @app.post("/solve")
 async def solve(board_data: BoardModel):
     # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
-    print(board_data)
     board = Board(
         width=board_data.width,
         height=board_data.height,
@@ -64,7 +63,6 @@ async def solve(board_data: BoardModel):
     )
 
     board.display_board()
-    print(board)
     solver = Solver()
     solution: list[Move] = solver.run(board)
 
