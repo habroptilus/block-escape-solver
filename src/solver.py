@@ -1,6 +1,6 @@
 from collections import deque
 
-from block import Board, Move, Position
+from src.block import Board, Move, Position
 
 
 class Solver:

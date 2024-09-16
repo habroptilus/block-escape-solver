@@ -1,29 +1,56 @@
-from block import Board, Cell, Move
-from samples import sample_map
-from solver import Solver
+from fastapi import FastAPI
+from pydantic import BaseModel
+
+from src.block import Board, Cell, Move, Position
+from src.solver import Solver
+
+app = FastAPI()
 
 
-def display_moves(moves: list[Move]) -> None:
-    for move in moves:
-        print(f"{move.from_cell} -> {move.to_cell} (Block: {move.block})")
+# This model should be the same as Board Class.
+class BoardModel(BaseModel):
+    width: int
+    height: int
+    goal: Cell
+    positions: list[Position]
 
 
-def main():
-    N = 6
-    goal = Cell(x=5, y=2)
+# This model should be the same as Move Class.
+class MoveModel(BaseModel):
+    from_cell: Cell
+    to_cell: Cell
+    block_id: int
 
-    init_positions = sample_map["pro_12"]
 
-    board = Board(width=N, height=N, goal=goal, positions=init_positions)
+@app.post("/solve")
+async def solve(board_data: BoardModel):
+    # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
+    board = Board(
+        width=board_data.width,
+        height=board_data.height,
+        goal=(board_data.goal.x, board_data.goal.y),
+        positions=[
+            (
+                pos.block.id,
+                pos.block.orientation,
+                pos.block.length,
+                (pos.cell.x, pos.cell.y),
+            )
+            for pos in board_data.positions
+        ],
+    )
+
     solver = Solver()
-    best_moves = solver.run(board=board)
+    solution: list[Move] = solver.run(board)
 
-    if best_moves is None:
-        print("No solution found.")
-    else:
-        print(f"Shortest moves: {len(best_moves)}")
-        display_moves(best_moves)
+    # 最短手順をAPIのレスポンス形式に変換
+    result = [
+        MoveModel(
+            from_cell=Cell(x=move.from_cell[0], y=move.from_cell[1]),
+            to_cell=Cell(x=move.to_cell[0], y=move.to_cell[1]),
+            block_id=move.block_id,
+        )
+        for move in solution
+    ]
 
-
-if __name__ == "__main__":
-    main()
+    return {"solution": result}
