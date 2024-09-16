@@ -1,4 +1,3 @@
-from collections import deque
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -48,8 +47,14 @@ class Board(BaseModel):
             block = position.block
             for i in range(block.length):
                 if block.orientation == "H":
+                    is_target_cell_occupied = cells_occupancy[cell.y][cell.x + i]
+                    if is_target_cell_occupied:
+                        raise Exception("The cell is already occupied.")
                     cells_occupancy[cell.y][cell.x + i] = True
                 elif block.orientation == "V":
+                    is_target_cell_occupied = cells_occupancy[cell.y + i][cell.x]
+                    if is_target_cell_occupied:
+                        raise Exception("The cell is already occupied.")
                     cells_occupancy[cell.y + i][cell.x] = True
 
         self.cells_occupancy = cells_occupancy
@@ -82,19 +87,20 @@ class Board(BaseModel):
     def is_cleared(self) -> bool:
         """ゲームがクリアされているかどうかを判定するメソッド"""
         for position in self.positions:
-            if position.block.is_target:
-                cell = position.cell
-                block = position.block
+            if not position.block.is_target:
+                continue
+            cell = position.cell
+            block = position.block
 
-                # ブロックの範囲を計算
-                if block.orientation == "H":
-                    block_cells = [(cell.x + i, cell.y) for i in range(block.length)]
-                elif block.orientation == "V":
-                    block_cells = [(cell.x, cell.y + i) for i in range(block.length)]
+            # ブロックの範囲を計算
+            if block.orientation == "H":
+                block_cells = [(cell.x + i, cell.y) for i in range(block.length)]
+            elif block.orientation == "V":
+                block_cells = [(cell.x, cell.y + i) for i in range(block.length)]
 
-                # goalがブロックの範囲内にあるか確認
-                if (self.goal.x, self.goal.y) in block_cells:
-                    return True
+            # goalがブロックの範囲内にあるか確認
+            if (self.goal.x, self.goal.y) in block_cells:
+                return True
 
         return False
 
@@ -140,61 +146,3 @@ class Board(BaseModel):
                 to_cells.append(Cell(y=bottom - block.length + 1, x=cell.x))
 
         return to_cells
-
-
-def apply_move(positions: list[Position], move: Move) -> list[Position]:
-    results = []
-    for position in positions:
-        if position.block != move.block:
-            results.append(position)
-        else:
-            results.append(Position(block=position.block, cell=move.to_cell))
-    return results
-
-
-def get_new_board(board: Board, move: Move) -> Board:
-    positions = board.positions
-    new_positions = apply_move(positions=positions, move=move)
-    return Board(
-        width=board.width, height=board.height, goal=board.goal, positions=new_positions
-    )
-
-
-def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
-    # BFS のためのキュー
-    queue = deque([(board, [])])
-    # 訪問済みの状態を管理するセット
-    visited = set()
-    # 現在のボードの状態を保存
-    visited.add(
-        tuple(
-            sorted([(pos.block.id, pos.cell.y, pos.cell.x) for pos in board.positions])
-        )
-    )
-
-    while queue:
-        current_board, moves = queue.popleft()
-        current_board.display_board()
-
-        # ゲームがクリアされているか確認
-        if current_board.is_cleared():
-            return moves
-
-        # 現在のボードから移動可能なすべての移動を計算
-        available_moves = current_board.calculate_available_moves()
-
-        for move in available_moves:
-            new_board = get_new_board(current_board, move)
-            new_positions = new_board.positions
-            # ボードの状態を保存
-            state_tuple = tuple(
-                sorted(
-                    [(pos.block.id, pos.cell.y, pos.cell.x) for pos in new_positions]
-                )
-            )
-
-            if state_tuple not in visited:
-                visited.add(state_tuple)
-                queue.append((new_board, moves + [move]))
-
-    return None
