@@ -1,0 +1,26 @@
+[project]
+name = "block-escape-solver"
+version = "0.1.0"
+description = "Add your description here"
+authors = [
+    { name = "guglilac", email = "x7deed53bc9k8@gmail.com" }
+]
+dependencies = []
+readme = "README.md"
+requires-python = ">= 3.8"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "ruff>=0.6.5",
+]
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/block_escape_solver"]
