@@ -18,7 +18,17 @@ const ArrowSymbol: React.FC<{ direction: 'up' | 'down' | 'left' | 'right' }> = (
     right: '→',
   };
 
-  return <span style={{ fontSize: '20px', color: 'blue' }}>{arrowMap[direction]}</span>;
+  return (
+    <span
+      style={{
+        fontSize: '24px',  // 大きさを変更
+        fontWeight: 'bold', // 太さを変更
+        color: 'blue',
+      }}
+    >
+      {arrowMap[direction]}
+    </span>
+  );
 };
 
 const SolutionBoard: React.FC<Props> = ({ solution }) => {
@@ -39,7 +49,10 @@ const SolutionBoard: React.FC<Props> = ({ solution }) => {
   const moveToShow = solution[currentStep];
 
   return (
-    <div>
+    <div style={{ textAlign: 'center' }}>
+      <div style={{ marginBottom: '10px', fontSize: '16px' }}>
+          Step {currentStep + 1} / {solution.length}
+      </div>
       <div
         style={{
           position: 'relative',
@@ -49,6 +62,7 @@ const SolutionBoard: React.FC<Props> = ({ solution }) => {
           display: 'grid',
           gridTemplateColumns: `repeat(${gridSize}, ${cellSize}px)`,
           gridTemplateRows: `repeat(${gridSize}, ${cellSize}px)`,
+          margin: '0 auto', // 中央揃え
         }}
       >
         {Array.from({ length: gridSize * gridSize }, (_, index) => {
@@ -65,6 +79,7 @@ const SolutionBoard: React.FC<Props> = ({ solution }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
+                backgroundColor: (moveToShow.from_cell.x === x && moveToShow.from_cell.y === y) ? 'lightyellow' : 'white',
               }}
             >
               {moveToShow.from_cell.x === x && moveToShow.from_cell.y === y ? (
@@ -74,16 +89,39 @@ const SolutionBoard: React.FC<Props> = ({ solution }) => {
           );
         })}
       </div>
-      <div>
-        <button onClick={handlePrev} disabled={currentStep === 0}>
+      <div style={{ marginTop: '10px' }}>
+        <button
+          onClick={handlePrev}
+          disabled={currentStep === 0}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            color: 'white',
+            backgroundColor: currentStep === 0 ? 'gray' : 'blue',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: currentStep === 0 ? 'not-allowed' : 'pointer',
+            marginRight: '10px',
+          }}
+        >
           Prev
         </button>
-        <button onClick={handleNext} disabled={currentStep >= solution.length - 1}>
+        <button
+          onClick={handleNext}
+          disabled={currentStep >= solution.length - 1}
+          style={{
+            padding: '10px 20px',
+            fontSize: '16px',
+            color: 'white',
+            backgroundColor: currentStep >= solution.length - 1 ? 'gray' : 'blue',
+            border: 'none',
+            borderRadius: '5px',
+            cursor: currentStep >= solution.length - 1 ? 'not-allowed' : 'pointer',
+          }}
+        >
           Next
         </button>
-        <div>
-          Step {currentStep + 1} of {solution.length}
-        </div>
+        
       </div>
     </div>
   );
