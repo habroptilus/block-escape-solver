@@ -36,7 +36,6 @@ def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
 
     while queue:
         current_board, moves = queue.popleft()
-        current_board.display_board()
 
         # ゲームがクリアされているか確認
         if current_board.is_cleared():
@@ -45,7 +44,6 @@ def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
         # 現在のボードから移動可能なすべての移動を計算
         available_moves = current_board.calculate_available_moves()
 
-        is_leaf_node = True
         for move in available_moves:
             new_board = get_new_board(current_board, move)
             new_positions = new_board.positions
@@ -57,14 +55,9 @@ def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
             )
 
             if state_tuple not in visited:
-                is_leaf_node = False
                 visited.add(state_tuple)
                 queue.append((new_board, moves + [move]))
 
-        if is_leaf_node:
-            current_board, moves = queue.popleft()
-            current_board.display_board()
-            # display_moves(moves)
     return None
 
 
