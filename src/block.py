@@ -3,8 +3,6 @@ from typing import Any, Literal
 
 from pydantic import BaseModel
 
-N = 6
-
 
 class Block(BaseModel):
     id: int
@@ -200,43 +198,3 @@ def find_shortest_path_to_clear(board: Board) -> list[Move] | None:
                 queue.append((new_board, moves + [move]))
 
     return None
-
-
-if __name__ == "__main__":
-    goal = Cell(x=5, y=2)
-    # init_positions: list[Position] = [
-    #     Position(cell=Cell(y=0, x=0), block=Block(id=1, length=3, orientation="H")),
-    #     Position(
-    #         cell=Cell(y=2, x=0),
-    #         block=Block(id=2, length=2, orientation="H", is_target=True),
-    #     ),
-    #     Position(cell=Cell(y=3, x=0), block=Block(id=3, length=2, orientation="V")),
-    #     Position(cell=Cell(y=5, x=0), block=Block(id=4, length=2, orientation="H")),
-    #     Position(cell=Cell(y=1, x=1), block=Block(id=5, length=2, orientation="H")),
-    #     Position(cell=Cell(y=2, x=2), block=Block(id=6, length=2, orientation="V")),
-    #     Position(cell=Cell(y=4, x=2), block=Block(id=7, length=2, orientation="H")),
-    #     Position(cell=Cell(y=0, x=3), block=Block(id=8, length=2, orientation="V")),
-    #     Position(cell=Cell(y=4, x=3), block=Block(id=9, length=2, orientation="H")),
-    #     Position(cell=Cell(y=0, x=4), block=Block(id=10, length=2, orientation="V")),
-    #     Position(cell=Cell(y=3, x=4), block=Block(id=11, length=2, orientation="H")),
-    #     Position(cell=Cell(y=4, x=4), block=Block(id=12, length=2, orientation="H")),
-    #     Position(cell=Cell(y=0, x=5), block=Block(id=13, length=3, orientation="V")),
-    # ]
-
-    init_positions = [
-        Position(
-            cell=Cell(y=2, x=0),
-            block=Block(id=1, length=2, orientation="H", is_target=True),
-        ),
-        Position(cell=Cell(y=3, x=1), block=Block(id=1, length=2, orientation="V")),
-        Position(cell=Cell(y=4, x=2), block=Block(id=2, length=2, orientation="H")),
-        Position(cell=Cell(y=0, x=4), block=Block(id=3, length=2, orientation="H")),
-        Position(cell=Cell(y=1, x=4), block=Block(id=4, length=2, orientation="V")),
-        Position(cell=Cell(y=3, x=4), block=Block(id=5, length=2, orientation="V")),
-    ]
-
-    board = Board(width=N, height=N, goal=goal, positions=init_positions)
-    board.display_board()
-
-    solution = find_shortest_path_to_clear(board=board)
-    print(solution)
