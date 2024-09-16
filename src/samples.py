@@ -23,11 +23,11 @@ BASIC_01 = [
         cell=Cell(y=2, x=0),
         block=Block(id=1, length=2, orientation="H", is_target=True),
     ),
-    Position(cell=Cell(y=3, x=1), block=Block(id=1, length=2, orientation="V")),
-    Position(cell=Cell(y=4, x=2), block=Block(id=2, length=2, orientation="H")),
-    Position(cell=Cell(y=0, x=4), block=Block(id=3, length=2, orientation="H")),
-    Position(cell=Cell(y=1, x=4), block=Block(id=4, length=2, orientation="V")),
-    Position(cell=Cell(y=3, x=4), block=Block(id=5, length=2, orientation="V")),
+    Position(cell=Cell(y=3, x=1), block=Block(id=2, length=2, orientation="V")),
+    Position(cell=Cell(y=4, x=2), block=Block(id=3, length=2, orientation="H")),
+    Position(cell=Cell(y=0, x=4), block=Block(id=4, length=2, orientation="H")),
+    Position(cell=Cell(y=1, x=4), block=Block(id=5, length=2, orientation="V")),
+    Position(cell=Cell(y=3, x=4), block=Block(id=6, length=2, orientation="V")),
 ]
 
 sample_map = {"pro_12": PRO_12, "basic_01": BASIC_01}
