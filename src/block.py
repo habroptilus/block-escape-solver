@@ -33,7 +33,7 @@ class PositionList(BaseModel):
     def __iter__(self) -> Iterator[Position]:
         return iter(self.positions)
 
-    def apply_move(self, move: Move) -> list[Position]:
+    def apply_move(self, move: Move) -> "PositionList":
         results = []
         for position in self.positions:
             if position.block != move.block:
