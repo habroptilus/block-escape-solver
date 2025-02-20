@@ -1,4 +1,4 @@
-from block import Block, Cell, Position
+from src.block import Block, Cell, Position
 
 PRO_12 = [
     Position(cell=Cell(y=0, x=0), block=Block(id=1, length=3, orientation="H")),

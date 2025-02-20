@@ -1,7 +1,7 @@
-from block import Board, Cell
-from samples import sample_map
-from solver import Solver
-from util import display_moves
+from src.block import Board, Cell
+from src.samples import sample_map
+from src.solver import Solver
+from src.util import display_moves
 
 
 def main():
