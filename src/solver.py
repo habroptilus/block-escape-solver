@@ -1,6 +1,6 @@
 from collections import deque
 
-from src.block import Board, Move, Position
+from src.block import Board, Move
 
 
 class Solver:
@@ -29,7 +29,7 @@ class Solver:
             available_moves = current_board.calculate_available_moves()
 
             for move in available_moves:
-                new_board = self._get_new_board(current_board, move)
+                new_board = current_board.apply_move(move)
                 new_positions = new_board.positions
                 # ボードの状態を保存
                 state_tuple = tuple(
@@ -46,22 +46,3 @@ class Solver:
                     queue.append((new_board, moves + [move]))
 
         return None
-
-    def _apply_move(self, positions: list[Position], move: Move) -> list[Position]:
-        results = []
-        for position in positions:
-            if position.block != move.block:
-                results.append(position)
-            else:
-                results.append(Position(block=position.block, cell=move.to_cell))
-        return results
-
-    def _get_new_board(self, board: Board, move: Move) -> Board:
-        positions = board.positions
-        new_positions = self._apply_move(positions=positions, move=move)
-        return Board(
-            width=board.width,
-            height=board.height,
-            goal=board.goal,
-            positions=new_positions,
-        )

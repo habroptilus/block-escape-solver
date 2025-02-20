@@ -1,4 +1,4 @@
-from typing import Any, Literal
+from typing import Any, Iterator, Literal
 
 from pydantic import BaseModel
 
@@ -27,11 +27,27 @@ class Move(BaseModel):
     # TODO: validate moves.
 
 
+class PositionList(BaseModel):
+    positions: list[Position]
+
+    def __iter__(self) -> Iterator[Position]:
+        return iter(self.positions)
+
+    def apply_move(self, move: Move) -> list[Position]:
+        results = []
+        for position in self.positions:
+            if position.block != move.block:
+                results.append(position)
+            else:
+                results.append(Position(block=position.block, cell=move.to_cell))
+        return PositionList(positions=results)
+
+
 class Board(BaseModel):
     width: int
     height: int
     goal: Cell
-    positions: list[Position]
+    positions: PositionList
     cells_occupancy: list[list[bool]] | None = None
 
     def model_post_init(self, __context: Any) -> None:
@@ -103,6 +119,15 @@ class Board(BaseModel):
                 return True
 
         return False
+
+    def apply_move(self, move: Move) -> "Board":
+        new_positions = self.positions.apply_move(move)
+        return Board(
+            width=self.width,
+            height=self.height,
+            goal=self.goal,
+            positions=new_positions,
+        )
 
     def _get_to_cells(self, cell, block) -> list[Cell]:
         to_cells = []
