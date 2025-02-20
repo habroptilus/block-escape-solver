@@ -6,7 +6,6 @@ import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
 from src.block import Block, Board, Cell, PositionList
-from src.samples import sample_map
 from src.solver import Solver
 
 GRID_SIZE = 6
@@ -69,9 +68,19 @@ if __name__ == "__main__":
         default="solution.gif",
         help="Path for the output GIF file.",
     )
+    parser.add_argument(
+        "--input-json",
+        type=str,
+        default="data.json",
+        help="Path for the input Json file.",
+    )
     args = parser.parse_args()
+    # ファイルからJSON文字列を読み込む
+    with open(args.input_json, "r", encoding="utf-8") as f:
+        json_data = f.read()
 
-    init_positions = PositionList(positions=sample_map["pro_12"])
+    # JSON文字列を PositionList インスタンスに変換
+    init_positions = PositionList.model_validate_json(json_data)
 
     N = GRID_SIZE
     goal = Cell(x=5, y=2)

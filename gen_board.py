@@ -1,4 +1,6 @@
+import json
 import tkinter as tk
+from tkinter import filedialog
 
 from src.block import Block, Cell, Position, PositionList
 
@@ -34,12 +36,26 @@ class BlockPuzzleGUI:
             )
 
     def create_get_positions_button(self):
-        button = tk.Button(self.root, text="盤面を取得", command=self.get_position_list)
+        button = tk.Button(
+            self.root, text="Save as json", command=self.get_position_list
+        )
         button.grid(row=1, column=0, pady=10)
 
     def get_position_list(self):
         position_list = PositionList(positions=self.blocks)
-        print(position_list.model_dump_json(indent=2))  # JSON形式で出力（デバッグ用）
+        data = position_list.model_dump_json(indent=2)
+
+        # ユーザーに保存先を選ばせる
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".json",
+            filetypes=[("JSON files", "*.json"), ("All Files", "*.*")],
+            title="Save JSON File",
+        )
+
+        if filepath:  # キャンセルされなかった場合のみ保存
+            with open(filepath, "w", encoding="utf-8") as f:
+                json.dump(json.loads(data), f, indent=2, ensure_ascii=False)
+            print(f"Saved to {filepath}")
 
     def create_block_palette(self):
         self.palette_blocks = []
