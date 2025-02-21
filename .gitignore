@@ -163,3 +163,4 @@ cython_debug/
 
 solutions/*.gif
 problems/*.json
+images/*

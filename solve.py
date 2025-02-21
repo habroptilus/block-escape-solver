@@ -1,6 +1,6 @@
 import argparse
-import glob
 import os
+import shutil
 from pathlib import Path
 
 import imageio.v2 as imageio
@@ -58,9 +58,14 @@ def draw_board(positions: PositionList, step: int, total_steps: int, filepath: s
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Solution GIF")
     parser.add_argument(
+        "input_json",
+        type=str,
+        help="Path for the input Json file.",
+    )
+    parser.add_argument(
         "--img-dir",
         type=str,
-        default="temp_images",
+        default="images",
         help="Path for temporary images directory.",
     )
     parser.add_argument(
@@ -70,11 +75,11 @@ if __name__ == "__main__":
         help="Path for the output GIF file directory.",
     )
     parser.add_argument(
-        "--input-json",
-        type=str,
-        default="problems/data.json",
-        help="Path for the input Json file.",
+        "--delete-images",
+        action="store_true",
+        help="If true, generated images will be deleted after generating gif file.",
     )
+
     args = parser.parse_args()
     # ファイルからJSON文字列を読み込む
     with open(args.input_json, "r", encoding="utf-8") as f:
@@ -90,6 +95,8 @@ if __name__ == "__main__":
 
     solver = Solver()
     best_moves = solver.run(board=board)
+    input_filepath = Path(args.input_json)
+    project_name = input_filepath.stem
 
     if best_moves is None:
         print("No solution found.")
@@ -97,9 +104,10 @@ if __name__ == "__main__":
         print(f"Shortest moves: {len(best_moves)}")
         total_steps = len(best_moves)
         images = []
-        os.makedirs(args.img_dir, exist_ok=True)
+        image_dir = Path(f"{args.img_dir}/{project_name}")
+        os.makedirs(image_dir, exist_ok=True)
         filepath = draw_board(
-            init_positions, 0, total_steps, filepath=f"{args.img_dir}/step_0.png"
+            init_positions, 0, total_steps, filepath=image_dir / "step_0.png"
         )
         images.append(imageio.imread(filepath))
 
@@ -109,19 +117,15 @@ if __name__ == "__main__":
                 board.positions,
                 step + 1,
                 total_steps,
-                filepath=f"{args.img_dir}/step_{step}.png",
+                filepath=image_dir / f"step_{step}.png",
             )
             images.append(imageio.imread(filepath))
-
-        input_filepath = Path(args.input_json)
 
         output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
         # GIFに変換
         imageio.mimsave(output_filepath, images, fps=1)
         print(f"GIF saved as {output_filepath}")
 
-        # 一時画像を削除
-        for filename in glob.glob(os.path.join(args.img_dir, "*")):
-            os.remove(filename)
-        os.rmdir(args.img_dir)
-        print("Temporary images deleted.")
+        if args.delete_images:
+            shutil.rmtree(image_dir)  # ディレクトリごと削除
+            print(f"Deleted: {image_dir}")
