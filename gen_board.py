@@ -24,7 +24,9 @@ class BlockPuzzleGUI:
         self.canvas.bind("<Button-1>", self.start_drag)
         self.canvas.bind("<B1-Motion>", self.on_drag)
         self.canvas.bind("<ButtonRelease-1>", self.place_block)
-        self.create_get_positions_button()  # ボタンを追加
+        self.create_get_positions_button()  # 保存ボタンを追加
+        self.create_reset_board_button()  # リセットボタンを追加
+        self.create_undo_button()  # Undoボタンを追加
 
     def draw_grid(self):
         for i in range(BOARD_SIZE + 1):
@@ -41,6 +43,14 @@ class BlockPuzzleGUI:
         )
         button.grid(row=1, column=0, pady=10)
 
+    def create_reset_board_button(self):
+        button = tk.Button(self.root, text="Reset board", command=self.reset_board)
+        button.grid(row=2, column=0, pady=10)
+
+    def create_undo_button(self):
+        button = tk.Button(self.root, text="Undo", command=self.undo)
+        button.grid(row=3, column=0, pady=10)
+
     def get_position_list(self):
         position_list = PositionList(positions=self.blocks)
         data = position_list.model_dump_json(indent=2)
@@ -56,6 +66,23 @@ class BlockPuzzleGUI:
             with open(filepath, "w", encoding="utf-8") as f:
                 json.dump(json.loads(data), f, indent=2, ensure_ascii=False)
             print(f"Saved to {filepath}")
+
+            self.reset_board()
+
+    def reset_board(self):
+        # **盤面の初期化**
+        self.block_id = 0
+        self.blocks = []  # 配置したブロックリストをリセット
+        self.canvas.delete("blocks")
+        self.draw_blocks()
+
+    def undo(self):
+        if len(self.blocks) > 0:
+            self.block_id -= 1
+            popped_block = self.blocks.pop()
+            print(popped_block)
+            self.canvas.delete("blocks")
+            self.draw_blocks()
 
     def create_block_palette(self):
         self.palette_blocks = []
@@ -122,9 +149,9 @@ class BlockPuzzleGUI:
 
             if x1 <= event.x <= x2 and y1 <= event.y <= y2:
                 self.selected_block = block
-                if block.is_target:
-                    self.palette_blocks.remove(block)  # ターゲットブロックは1回のみ
-                    self.canvas.delete(f"palette_{block.id}")
+                # if block.is_target:
+                #    self.palette_blocks.remove(block)  # ターゲットブロックは1回のみ
+                #    self.canvas.delete(f"palette_{block.id}")
                 return
 
     def place_block(self, event):
