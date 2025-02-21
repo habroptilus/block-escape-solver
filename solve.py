@@ -101,6 +101,12 @@ if __name__ == "__main__":
         help="Path for the input Json file.",
     )
     parser.add_argument(
+        "--input-dir",
+        type=str,
+        default="problems",
+        help="Directory where the input Json file exists.",
+    )
+    parser.add_argument(
         "--img-dir",
         type=str,
         default="images",
@@ -119,8 +125,10 @@ if __name__ == "__main__":
     )
 
     args = parser.parse_args()
+    input_filepath = Path(f"{args.input_dir}/{args.input_json}")
+
     # ファイルからJSON文字列を読み込む
-    with open(args.input_json, "r", encoding="utf-8") as f:
+    with open(input_filepath, "r", encoding="utf-8") as f:
         json_data = f.read()
 
     # JSON文字列を PositionList インスタンスに変換
@@ -135,7 +143,6 @@ if __name__ == "__main__":
     solver = Solver()
     best_moves = solver.run(board=board)
 
-    input_filepath = Path(args.input_json)
     project_name = input_filepath.stem
     output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
 
