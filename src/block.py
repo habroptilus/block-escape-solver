@@ -24,7 +24,20 @@ class Move(BaseModel):
     block: Block
     from_cell: Cell
     to_cell: Cell
-    # TODO: validate moves.
+    # TODO: validate model
+
+    def get_direction(self) -> str:
+        dx = self.to_cell.x - self.from_cell.x
+        dy = self.to_cell.y - self.from_cell.y
+
+        if dx == 0 and dy > 0:
+            return "down"
+        elif dx == 0 and dy < 0:
+            return "up"
+        elif dy == 0 and dx > 0:
+            return "right"
+        elif dy == 0 and dx < 0:
+            return "left"
 
 
 class PositionList(BaseModel):

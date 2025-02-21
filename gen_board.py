@@ -79,8 +79,7 @@ class BlockPuzzleGUI:
     def undo(self):
         if len(self.blocks) > 0:
             self.block_id -= 1
-            popped_block = self.blocks.pop()
-            print(popped_block)
+            _ = self.blocks.pop()
             self.canvas.delete("blocks")
             self.draw_blocks()
 

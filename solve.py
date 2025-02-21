@@ -6,7 +6,7 @@ from pathlib import Path
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
-from src.block import Block, Board, Cell, PositionList
+from src.block import Block, Board, Cell, Move, PositionList
 from src.solver import Solver
 
 GRID_SIZE = 6
@@ -19,13 +19,21 @@ def get_color(block: Block) -> str:
     return "gray"
 
 
-def draw_board(positions: PositionList, step: int, total_steps: int, filepath: str):
-    fig, ax = plt.subplots(figsize=(6, 6))
+def draw_board(
+    positions: PositionList,
+    step: int,
+    total_steps: int,
+    filepath: str,
+    next_move: Move | None = None,
+):
+    _, ax = plt.subplots(figsize=(6, 6))
     ax.set_xlim(0, GRID_SIZE)
     ax.set_ylim(0, GRID_SIZE)
     ax.set_xticks(range(GRID_SIZE + 1))
     ax.set_yticks(range(GRID_SIZE + 1))
     ax.grid(True)
+
+    move_block = None
 
     for pos in positions:
         x = pos.cell.x
@@ -45,6 +53,36 @@ def draw_board(positions: PositionList, step: int, total_steps: int, filepath: s
                 linewidth=5,
                 alpha=0.8,
             )
+        )
+        # 動かすブロックの情報を取得
+        if (next_move is not None) and (block.id == move.block.id):
+            move_block = (x, y, w, h)
+
+    # 矢印の描画（移動対象のブロックがある場合）
+    if move_block:
+        x, y, w, h = move_block
+        center_x = x + (w / 2)
+        center_y = y + (h / 2)
+
+        # 矢印の終点を設定
+        direction = move.get_direction()
+        arrow_dx, arrow_dy = 0, 0
+        if direction == "up":
+            arrow_dy = -1
+        elif direction == "down":
+            arrow_dy = 1
+        elif direction == "left":
+            arrow_dx = -1
+        elif direction == "right":
+            arrow_dx = 1
+
+        ax.annotate(
+            "",
+            xy=(center_x + arrow_dx, center_y + arrow_dy),
+            xytext=(center_x, center_y),
+            arrowprops=dict(
+                facecolor="white", edgecolor="black", arrowstyle="->", lw=4
+            ),
         )
 
     ax.set_title(f"Step {step}/{total_steps}")
@@ -93,10 +131,13 @@ if __name__ == "__main__":
 
     board = Board(width=N, height=N, goal=goal, positions=init_positions)
 
+    # solve
     solver = Solver()
     best_moves = solver.run(board=board)
+
     input_filepath = Path(args.input_json)
     project_name = input_filepath.stem
+    output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
 
     if best_moves is None:
         print("No solution found.")
@@ -106,22 +147,27 @@ if __name__ == "__main__":
         images = []
         image_dir = Path(f"{args.img_dir}/{project_name}")
         os.makedirs(image_dir, exist_ok=True)
+
+        for step, move in enumerate(best_moves):
+            filepath = draw_board(
+                board.positions,
+                step,
+                total_steps,
+                filepath=image_dir / f"step_{step}.png",
+                next_move=move,
+            )
+            images.append(imageio.imread(filepath))
+            board = board.apply_move(move)
+
+        # Last step
         filepath = draw_board(
-            init_positions, 0, total_steps, filepath=image_dir / "step_0.png"
+            board.positions,
+            total_steps,
+            total_steps,
+            filepath=image_dir / f"step_{total_steps}.png",
         )
         images.append(imageio.imread(filepath))
 
-        for step, move in enumerate(best_moves):
-            board = board.apply_move(move)
-            filepath = draw_board(
-                board.positions,
-                step + 1,
-                total_steps,
-                filepath=image_dir / f"step_{step}.png",
-            )
-            images.append(imageio.imread(filepath))
-
-        output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
         # GIFに変換
         imageio.mimsave(output_filepath, images, fps=1)
         print(f"GIF saved as {output_filepath}")
