@@ -1,6 +1,7 @@
 import argparse
 import glob
 import os
+from pathlib import Path
 
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
@@ -57,21 +58,21 @@ def draw_board(positions: PositionList, step: int, total_steps: int, filepath: s
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Solution GIF")
     parser.add_argument(
-        "--temp-dir",
+        "--img-dir",
         type=str,
         default="temp_images",
         help="Path for temporary images directory.",
     )
     parser.add_argument(
-        "--output-gif",
+        "--output-gif-dir",
         type=str,
-        default="solution.gif",
-        help="Path for the output GIF file.",
+        default="solutions",
+        help="Path for the output GIF file directory.",
     )
     parser.add_argument(
         "--input-json",
         type=str,
-        default="data.json",
+        default="problems/data.json",
         help="Path for the input Json file.",
     )
     args = parser.parse_args()
@@ -96,9 +97,9 @@ if __name__ == "__main__":
         print(f"Shortest moves: {len(best_moves)}")
         total_steps = len(best_moves)
         images = []
-        os.makedirs(args.temp_dir, exist_ok=True)
+        os.makedirs(args.img_dir, exist_ok=True)
         filepath = draw_board(
-            init_positions, 0, total_steps, filepath=f"{args.temp_dir}/step_0.png"
+            init_positions, 0, total_steps, filepath=f"{args.img_dir}/step_0.png"
         )
         images.append(imageio.imread(filepath))
 
@@ -108,16 +109,19 @@ if __name__ == "__main__":
                 board.positions,
                 step + 1,
                 total_steps,
-                filepath=f"{args.temp_dir}/step_{step}.png",
+                filepath=f"{args.img_dir}/step_{step}.png",
             )
             images.append(imageio.imread(filepath))
 
+        input_filepath = Path(args.input_json)
+
+        output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
         # GIFに変換
-        imageio.mimsave(args.output_gif, images, fps=1)
-        print(f"GIF saved as {args.output_gif}")
+        imageio.mimsave(output_filepath, images, fps=1)
+        print(f"GIF saved as {output_filepath}")
 
         # 一時画像を削除
-        for filename in glob.glob(os.path.join(args.temp_dir, "*")):
+        for filename in glob.glob(os.path.join(args.img_dir, "*")):
             os.remove(filename)
-        os.rmdir(args.temp_dir)
+        os.rmdir(args.img_dir)
         print("Temporary images deleted.")
