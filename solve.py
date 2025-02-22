@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 
 from src.block import Block, Board, Cell, Move, PositionList
 from src.solver import Solver
+from upload_draft import upload_draft
 
 GRID_SIZE = 6
 
@@ -182,3 +183,15 @@ if __name__ == "__main__":
         if args.delete_images:
             shutil.rmtree(image_dir)  # ディレクトリごと削除
             print(f"Deleted: {image_dir}")
+
+        level, level_num = project_name.split("_")
+
+        mapping = {
+            "expert": "エキスパート",
+            "pro": "プロ",
+            "hard": "ハード",
+            "master": "マスター",
+        }
+        if level not in mapping:
+            print(f"{level} is not supported. So Uploading draft is skipped.")
+            upload_draft(level=level, level_num=int(level_num))
