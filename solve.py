@@ -202,12 +202,14 @@ if __name__ == "__main__":
         folder_name = "MyFolder"  # アップロード先フォルダ名（任意）
 
         # Upload
+        print("Uploading Gif file...")
         image_url = upload_image(
             username=username,
             api_key=api_key,
             image_path=image_path,
             folder_name=folder_name,
         )
+        print("Uploading blog post...")
         upload_draft(
             level=mapping[level], level_num=int(level_num), image_url=image_url
         )
