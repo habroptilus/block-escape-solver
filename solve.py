@@ -121,9 +121,9 @@ if __name__ == "__main__":
         help="Path for the output GIF file directory.",
     )
     parser.add_argument(
-        "--delete-images",
+        "--keep-images",
         action="store_true",
-        help="If true, generated images will be deleted after generating gif file.",
+        help="If true, generated images will be keeped.",
     )
 
     args = parser.parse_args()
@@ -181,7 +181,7 @@ if __name__ == "__main__":
         imageio.mimsave(output_filepath, images, fps=1)
         print(f"GIF saved as {output_filepath}")
 
-        if args.delete_images:
+        if not args.keep_images:
             shutil.rmtree(image_dir)  # ディレクトリごと削除
             print(f"Deleted: {image_dir}")
 

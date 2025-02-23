@@ -6,7 +6,6 @@ def upload_draft(level: str, level_num: int, image_url: str):
 Title: スマホアプリ『ナンバーパズル - ブロック脱出』{level} レベル{level_num} 解答
 Category:
   - ブロック脱出-{level}
-Draft: yes
 ---
 
 スマホアプリ『ナンバーパズル』のブロック脱出の
