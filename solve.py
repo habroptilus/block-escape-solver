@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 from src.block import Block, Board, Cell, Move, PositionList
 from src.solver import Solver
 from upload_draft import upload_draft
+from upload_image import upload_image
 
 GRID_SIZE = 6
 
@@ -195,4 +196,18 @@ if __name__ == "__main__":
         if level not in mapping:
             print(f"{level} is not supported. So Uploading draft is skipped.")
 
-        upload_draft(level=mapping[level], level_num=int(level_num))
+        username = os.environ.get("HATENA_USER_NAME")
+        api_key = os.environ.get("HATENA_API_KEY")
+        image_path = "solutions/expert_1.gif"  # アップロードする画像のパス
+        folder_name = "MyFolder"  # アップロード先フォルダ名（任意）
+
+        # Upload
+        image_url = upload_image(
+            username=username,
+            api_key=api_key,
+            image_path=image_path,
+            folder_name=folder_name,
+        )
+        upload_draft(
+            level=mapping[level], level_num=int(level_num), image_url=image_url
+        )
