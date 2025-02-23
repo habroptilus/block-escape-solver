@@ -194,4 +194,5 @@ if __name__ == "__main__":
         }
         if level not in mapping:
             print(f"{level} is not supported. So Uploading draft is skipped.")
-            upload_draft(level=level, level_num=int(level_num))
+
+        upload_draft(level=mapping[level], level_num=int(level_num))
