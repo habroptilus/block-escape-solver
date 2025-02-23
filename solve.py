@@ -183,7 +183,6 @@ if __name__ == "__main__":
 
         if not args.keep_images:
             shutil.rmtree(image_dir)  # ディレクトリごと削除
-            print(f"Deleted: {image_dir}")
 
         level, level_num = project_name.split("_")
 
