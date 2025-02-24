@@ -197,7 +197,6 @@ if __name__ == "__main__":
 
         username = os.environ.get("HATENA_USER_NAME")
         api_key = os.environ.get("HATENA_API_KEY")
-        image_path = "solutions/expert_1.gif"  # アップロードする画像のパス
         folder_name = "MyFolder"  # アップロード先フォルダ名（任意）
 
         # Upload
@@ -205,7 +204,7 @@ if __name__ == "__main__":
         image_url = upload_image(
             username=username,
             api_key=api_key,
-            image_path=image_path,
+            image_path=output_filepath,
             folder_name=folder_name,
         )
         print("Uploading blog post...")
