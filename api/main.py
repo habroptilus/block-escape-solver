@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 
-from src.block import Block, Board, Cell, Move, Position
+from src.block import Block, Board, Cell, Move, Position, PositionList
 from src.solver import Solver
 from src.util import display_moves
 
@@ -56,10 +56,12 @@ async def solve(board_data: BoardModel):
         width=board_data.width,
         height=board_data.height,
         goal=Cell(**board_data.goal),
-        positions=[
-            Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
-            for pos in board_data.positions
-        ],
+        positions=PositionList(
+            positions=[
+                Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
+                for pos in board_data.positions
+            ]
+        ),
     )
 
     board.display_board()
