@@ -112,6 +112,7 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
             ]
         ),
     )
+    print(board.positions)
 
     board.display_board()
     solver = Solver()
