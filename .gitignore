@@ -165,3 +165,4 @@ solutions/*.gif
 problems/*.json
 images/*
 .vercel
+dev/*.json
