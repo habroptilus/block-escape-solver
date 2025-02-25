@@ -6,10 +6,10 @@ from pathlib import Path
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
+from blog.upload_draft import upload_draft
+from blog.upload_image import upload_image
 from src.block import Block, Board, Cell, Move, PositionList
 from src.solver import Solver
-from upload_draft import upload_draft
-from upload_image import upload_image
 
 GRID_SIZE = 6
 

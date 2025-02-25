@@ -10,5 +10,5 @@ npm run dev
 api
 
 ```shell
-rye run  uvicorn src.main:app --reload
+rye run uvicorn api.main:app --reload
 ```
