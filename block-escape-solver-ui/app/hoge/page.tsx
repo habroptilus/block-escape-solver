@@ -27,7 +27,7 @@ const initialBlocks: Block[] = [
 
 const BlockPuzzle = () => {
   const [blocks, setBlocks] = useState<Position[]>([]);
-  const [draggingBlock, setDraggingBlock] = useState<Block | null>(null);
+  const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
   const [gifUrl, setGifUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -85,9 +85,8 @@ const BlockPuzzle = () => {
     });
   };
 
-  const handleDrop = (event: React.DragEvent<HTMLCanvasElement>) => {
-    event.preventDefault();
-    if (!draggingBlock) return;
+  const handleCellClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!selectedBlock) return;
 
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -95,13 +94,12 @@ const BlockPuzzle = () => {
     const y = Math.floor((event.clientY - rect.top) / BLOCK_SIZE);
 
     if (x < BOARD_SIZE && y < BOARD_SIZE) {
-      setBlocks([...blocks, { x, y, block: draggingBlock }]);
-      setDraggingBlock(null);
+      setBlocks([...blocks, { x, y, block: selectedBlock }]);
     }
   };
 
-  const handleDragStart = (block: Block) => {
-    setDraggingBlock(block);
+  const handleBlockSelect = (block: Block) => {
+    setSelectedBlock(block);
   };
 
   const handleUndo = () => {
@@ -152,15 +150,15 @@ const BlockPuzzle = () => {
         {initialBlocks.map((block, index) => (
           <div
             key={index}
-            className={`relative cursor-pointer border border-black ${block.isTarget ? "bg-red-500" : "bg-gray-500"}`}
-            draggable
-            onDragStart={() => handleDragStart(block)}
+            className={`relative cursor-pointer border border-black ${block.isTarget ? "bg-red-500" : "bg-gray-500"} ${selectedBlock === block ? "border-4 border-blue-500 shadow-lg shadow-blue-500/50 scale-110" : ""}`}
+            onClick={() => handleBlockSelect(block)}
             style={{
               width: block.orientation === "H" ? block.length * BLOCK_SIZE : BLOCK_SIZE,
               height: block.orientation === "V" ? block.length * BLOCK_SIZE : BLOCK_SIZE,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
+              transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
             }}
           ></div>
         ))}
@@ -170,8 +168,7 @@ const BlockPuzzle = () => {
         width={BOARD_SIZE * BLOCK_SIZE}
         height={BOARD_SIZE * BLOCK_SIZE}
         className="border bg-white mt-4"
-        onDragOver={(e) => e.preventDefault()}
-        onDrop={handleDrop}
+        onClick={handleCellClick}
       ></canvas>
       <div className="mt-4 flex gap-4">
         <button onClick={handleUndo} className="px-4 py-2 bg-blue-500 text-white rounded">Undo</button>
