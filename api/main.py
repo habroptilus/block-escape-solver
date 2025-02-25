@@ -1,7 +1,9 @@
+import os
 from typing import Any, Literal
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from src.block import Block, Board, Cell, Move, Position, PositionList
@@ -81,3 +83,19 @@ async def solve(board_data: BoardModel):
     ]
 
     return {"solution": result}
+
+
+app = FastAPI()
+
+
+@app.post("/generate-gif")
+async def generate_gif():
+    # ここでGIFファイルを生成する処理を行う
+    gif_path = "path/to/your/generated.gif"
+
+    # ファイルが存在するかチェック
+    if not os.path.exists(gif_path):
+        raise HTTPException(status_code=404, detail="GIFファイルが見つかりません")
+
+    # GIFファイルを返す
+    return FileResponse(gif_path, media_type="image/gif", filename="result.gif")

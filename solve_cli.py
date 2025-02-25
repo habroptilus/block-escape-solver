@@ -1,99 +1,11 @@
 import argparse
-import os
-import shutil
 from pathlib import Path
 
-import imageio.v2 as imageio
-import matplotlib.pyplot as plt
-
-from blog.upload_draft import upload_draft
-from blog.upload_image import upload_image
-from src.block import Block, Board, Cell, Move, PositionList
+from src.block import Board, Cell, PositionList
+from src.drawer import GifDrawer
 from src.solver import Solver
 
 GRID_SIZE = 6
-
-
-def get_color(block: Block) -> str:
-    # ターゲットブロックは赤
-    if block.is_target:
-        return "red"
-    return "gray"
-
-
-def draw_board(
-    positions: PositionList,
-    step: int,
-    total_steps: int,
-    filepath: str,
-    next_move: Move | None = None,
-):
-    _, ax = plt.subplots(figsize=(6, 6))
-    ax.set_xlim(0, GRID_SIZE)
-    ax.set_ylim(0, GRID_SIZE)
-    ax.set_xticks(range(GRID_SIZE + 1))
-    ax.set_yticks(range(GRID_SIZE + 1))
-    ax.grid(True)
-
-    move_block = None
-
-    for pos in positions:
-        x = pos.cell.x
-        y = pos.cell.y
-        block = pos.block
-        if block.orientation == "H":
-            w, h = block.length, 1
-        else:  # "V"
-            w, h = 1, block.length
-        ax.add_patch(
-            plt.Rectangle(
-                (x, y),
-                w,
-                h,
-                facecolor=get_color(block),
-                edgecolor="black",
-                linewidth=5,
-                alpha=0.8,
-            )
-        )
-        # 動かすブロックの情報を取得
-        if (next_move is not None) and (block.id == move.block.id):
-            move_block = (x, y, w, h)
-
-    # 矢印の描画（移動対象のブロックがある場合）
-    if move_block:
-        x, y, w, h = move_block
-        center_x = x + (w / 2)
-        center_y = y + (h / 2)
-
-        # 矢印の終点を設定
-        direction = move.get_direction()
-        arrow_dx, arrow_dy = 0, 0
-        if direction == "up":
-            arrow_dy = -1
-        elif direction == "down":
-            arrow_dy = 1
-        elif direction == "left":
-            arrow_dx = -1
-        elif direction == "right":
-            arrow_dx = 1
-
-        ax.annotate(
-            "",
-            xy=(center_x + arrow_dx, center_y + arrow_dy),
-            xytext=(center_x, center_y),
-            arrowprops=dict(
-                facecolor="white", edgecolor="black", arrowstyle="->", lw=4
-            ),
-        )
-
-    ax.set_title(f"Step {step}/{total_steps}")
-    plt.gca().invert_yaxis()
-
-    plt.savefig(filepath)
-    plt.close()
-    return filepath
-
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Solution GIF")
@@ -147,67 +59,14 @@ if __name__ == "__main__":
 
     project_name = input_filepath.stem
     output_filepath = f"{args.output_gif_dir}/{input_filepath.stem}.gif"
+    image_dir = Path(f"{args.img_dir}/{project_name}")
 
+    # draw
     if best_moves is None:
         print("No solution found.")
     else:
         print(f"Shortest moves: {len(best_moves)}")
-        total_steps = len(best_moves)
-        images = []
-        image_dir = Path(f"{args.img_dir}/{project_name}")
-        os.makedirs(image_dir, exist_ok=True)
-
-        for step, move in enumerate(best_moves):
-            filepath = draw_board(
-                board.positions,
-                step,
-                total_steps,
-                filepath=image_dir / f"step_{step}.png",
-                next_move=move,
-            )
-            images.append(imageio.imread(filepath))
-            board = board.apply_move(move)
-
-        # Last step
-        filepath = draw_board(
-            board.positions,
-            total_steps,
-            total_steps,
-            filepath=image_dir / f"step_{total_steps}.png",
+        drawer = GifDrawer(
+            grid_size=GRID_SIZE, image_dir=image_dir, keep_images=args.keep_images
         )
-        images.append(imageio.imread(filepath))
-
-        # GIFに変換
-        imageio.mimsave(output_filepath, images, fps=1)
-        print(f"GIF saved as {output_filepath}")
-
-        if not args.keep_images:
-            shutil.rmtree(image_dir)  # ディレクトリごと削除
-
-        level, level_num = project_name.split("_")
-
-        mapping = {
-            "expert": "エキスパート",
-            "pro": "プロ",
-            "hard": "ハード",
-            "master": "マスター",
-        }
-        if level not in mapping:
-            print(f"{level} is not supported. So Uploading draft is skipped.")
-
-        username = os.environ.get("HATENA_USER_NAME")
-        api_key = os.environ.get("HATENA_API_KEY")
-        folder_name = "MyFolder"  # アップロード先フォルダ名（任意）
-
-        # Upload
-        print("Uploading Gif file...")
-        image_url = upload_image(
-            username=username,
-            api_key=api_key,
-            image_path=output_filepath,
-            folder_name=folder_name,
-        )
-        print("Uploading blog post...")
-        upload_draft(
-            level=mapping[level], level_num=int(level_num), image_url=image_url
-        )
+        drawer.run(board=board, solutions=best_moves, output_filepath=output_filepath)
