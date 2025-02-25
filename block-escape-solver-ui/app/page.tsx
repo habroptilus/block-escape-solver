@@ -88,6 +88,10 @@ const BlockPuzzle = () => {
   const handleCellClick = (event: React.MouseEvent<HTMLCanvasElement>) => {
     if (!selectedBlock) return;
 
+    if (selectedBlock.isTarget && blocks.some(b => b.block.isTarget)) {
+      return; // 既にターゲットブロックが配置されている場合は追加しない
+    }
+
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
     const x = Math.floor((event.clientX - rect.left) / BLOCK_SIZE);
