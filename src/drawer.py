@@ -50,7 +50,7 @@ class GifDrawer:
                     (x, y),
                     w,
                     h,
-                    facecolor=self.get_color(block),
+                    facecolor=self._get_color(block),
                     edgecolor="black",
                     linewidth=5,
                     alpha=0.8,

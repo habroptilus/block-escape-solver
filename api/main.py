@@ -1,12 +1,14 @@
 import os
+from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
 
 from src.block import Block, Board, Cell, Move, Position, PositionList
+from src.drawer import GifDrawer
 from src.solver import Solver
 from src.util import display_moves
 
@@ -89,13 +91,35 @@ app = FastAPI()
 
 
 @app.post("/generate-gif")
-async def generate_gif():
-    # ここでGIFファイルを生成する処理を行う
-    gif_path = "path/to/your/generated.gif"
+async def generate_gif(board_data: BoardModel):
+    # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
+    board = Board(
+        width=board_data.width,
+        height=board_data.height,
+        goal=Cell(**board_data.goal),
+        positions=PositionList(
+            positions=[
+                Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
+                for pos in board_data.positions
+            ]
+        ),
+    )
+
+    board.display_board()
+    solver = Solver()
+    solution: list[Move] = solver.run(board)
+
+    display_moves(solution)
+
+    output_filepath = "output.gif"
+    drawer = GifDrawer(
+        grid_size=board_data.width, image_dir=Path("tmp_images"), keep_images=False
+    )
+    drawer.run(board=board, solutions=solution, output_filepath="output.gif")
 
     # ファイルが存在するかチェック
-    if not os.path.exists(gif_path):
+    if not os.path.exists(output_filepath):
         raise HTTPException(status_code=404, detail="GIFファイルが見つかりません")
 
     # GIFファイルを返す
-    return FileResponse(gif_path, media_type="image/gif", filename="result.gif")
+    return FileResponse(output_filepath, media_type="image/gif", filename="result.gif")
