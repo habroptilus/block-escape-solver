@@ -3,6 +3,7 @@ import { useState, useRef, useEffect } from "react";
 
 const BLOCK_SIZE = 50;
 const BOARD_SIZE = 6;
+const GOAL_POSITION = { x: 5, y: 2 };
 
 interface Block {
   orientation: "H" | "V";
@@ -52,6 +53,10 @@ const BlockPuzzle = () => {
       ctx.lineTo(BOARD_SIZE * BLOCK_SIZE, i * BLOCK_SIZE);
       ctx.stroke();
     }
+
+    ctx.fillStyle = "blue";
+    ctx.font = "bold 20px Arial";
+    ctx.fillText("G", GOAL_POSITION.x * BLOCK_SIZE + 15, GOAL_POSITION.y * BLOCK_SIZE + 35);
   };
 
   const drawBlocks = () => {
@@ -112,7 +117,7 @@ const BlockPuzzle = () => {
     const jsonData = {
       width: BOARD_SIZE,
       height: BOARD_SIZE,
-      goal: { x: 5, y: 2 },
+      goal: GOAL_POSITION,
       positions: blocks.map(({ x, y, block }) => ({
         cell: { x, y },
         block: {

@@ -116,7 +116,9 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
 
     board.display_board()
     solver = Solver()
-    solution: list[Move] = solver.run(board)
+    solution: list[Move] | None = solver.run(board)
+    if solution is None:
+        raise HTTPException(status_code=404, detail="解答が生成できませんでした。")
 
     display_moves(solution)
 
