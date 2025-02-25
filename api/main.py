@@ -2,7 +2,7 @@ import os
 from pathlib import Path
 from typing import Any, Literal
 
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from pydantic import BaseModel
@@ -36,6 +36,14 @@ def _get_direction(from_cell: Cell, to_cell: Cell) -> DirectionType:
         return "left" if from_cell.x > to_cell.x else "right"
     else:
         raise ValueError("Cells are not aligned horizontally or vertically.")
+
+
+def _remove_file(path: str):
+    try:
+        os.remove(path)
+        print(f"Deleted file: {path}")
+    except Exception as e:
+        print(f"Error deleting file {path}: {e}")
 
 
 # This model should be the same as Board Class.
@@ -91,7 +99,7 @@ app = FastAPI()
 
 
 @app.post("/generate-gif")
-async def generate_gif(board_data: BoardModel):
+async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks):
     # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
     board = Board(
         width=board_data.width,
@@ -121,5 +129,12 @@ async def generate_gif(board_data: BoardModel):
     if not os.path.exists(output_filepath):
         raise HTTPException(status_code=404, detail="GIFファイルが見つかりません")
 
+    background_tasks.add_task(_remove_file, output_filepath)
+
     # GIFファイルを返す
-    return FileResponse(output_filepath, media_type="image/gif", filename="result.gif")
+    return FileResponse(
+        output_filepath,
+        media_type="image/gif",
+        filename="result.gif",
+        background=background_tasks,
+    )
