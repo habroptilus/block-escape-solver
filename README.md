@@ -1,11 +1,24 @@
 # block-escape-solver
 
-ui
+## UI
+
+https://block-escape-solver-ui.vercel.app
+
+Run locally:
 
 ```shell
 cd block-escape-solver-ui
 npm run dev
 ```
+
+Deploy to vercel
+
+```shell
+cd block-escape-solver-ui
+vercel --prod
+```
+
+## API
 
 api (local)
 
