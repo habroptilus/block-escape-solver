@@ -1,5 +1,6 @@
 import argparse
 import os
+from pathlib import Path
 
 from blog.upload_draft import upload_draft
 from blog.upload_image import upload_image
@@ -12,7 +13,7 @@ if __name__ == "__main__":
         help="Path for the gif file.",
     )
     args = parser.parse_args()
-    project_name = args.input_gif.stem
+    project_name = Path(args.input_gif).stem
     level, level_num = project_name.split("_")
 
     mapping = {
