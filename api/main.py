@@ -14,6 +14,10 @@ from src.util import display_moves
 
 app = FastAPI()
 
+if "VERCEL" in os.environ:
+    TMP_DIR = "/tmp"
+else:
+    TMP_DIR = "tmp"  # ローカル環境用
 
 # CORSミドルウェアの設定
 app.add_middleware(
@@ -95,9 +99,6 @@ async def solve(board_data: BoardModel):
     return {"solution": result}
 
 
-app = FastAPI()
-
-
 @app.post("/generate-gif")
 async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks):
     # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
@@ -129,11 +130,13 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
 
     display_moves(solution)
 
-    output_filepath = "output.gif"
+    output_filepath = f"{TMP_DIR}/output.gif"
     drawer = GifDrawer(
-        grid_size=board_data.width, image_dir=Path("tmp_images"), keep_images=False
+        grid_size=board_data.width,
+        image_dir=Path(f"{TMP_DIR}/images"),
+        keep_images=False,
     )
-    drawer.run(board=board, solutions=solution, output_filepath="output.gif")
+    drawer.run(board=board, solutions=solution, output_filepath=output_filepath)
 
     # ファイルが存在するかチェック
     if not os.path.exists(output_filepath):
