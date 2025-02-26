@@ -20,9 +20,9 @@ interface Position {
 const initialBlocks: Block[] = [
   { orientation: "H", length: 2, isTarget: true },
   { orientation: "H", length: 2, isTarget: false },
-  { orientation: "V", length: 3, isTarget: false },
   { orientation: "H", length: 3, isTarget: false },
   { orientation: "V", length: 2, isTarget: false },
+  { orientation: "V", length: 3, isTarget: false },  
 ];
 
 const BlockPuzzle = () => {
@@ -89,7 +89,7 @@ const BlockPuzzle = () => {
     if (!selectedBlock) return;
 
     if (selectedBlock.isTarget && blocks.some(b => b.block.isTarget)) {
-      return; // 既にターゲットブロックが配置されている場合は追加しない
+      return;
     }
 
     const rect = canvasRef.current?.getBoundingClientRect();
@@ -140,13 +140,11 @@ const BlockPuzzle = () => {
     });
 
     if (response.status === 400) {
-      console.error("Invalid board configuration: No possible solution.");
       alert("解答生成に失敗しました: 盤面の配置が正しくない可能性があります。");
       return;
     }
 
     if (!response.ok) {
-      console.error("Failed to get GIF");
       return;
     }
 
@@ -156,7 +154,7 @@ const BlockPuzzle = () => {
 
   return (
     <div className="flex flex-col items-center">
-      <div className="flex gap-2 p-4 border">
+      <div className="flex gap-2 p-4 border overflow-x-auto max-w-full">
         {initialBlocks.map((block, index) => (
           <div
             key={index}
@@ -165,10 +163,6 @@ const BlockPuzzle = () => {
             style={{
               width: block.orientation === "H" ? block.length * BLOCK_SIZE : BLOCK_SIZE,
               height: block.orientation === "V" ? block.length * BLOCK_SIZE : BLOCK_SIZE,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              transition: "transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out",
             }}
           ></div>
         ))}
