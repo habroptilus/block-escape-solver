@@ -65,6 +65,7 @@ class Board(BaseModel):
 
     def model_post_init(self, __context: Any) -> None:
         self._init_occupancy()
+        self._only_one_target_block()
 
     def _init_occupancy(self) -> None:
         cells_occupancy = [
@@ -78,15 +79,21 @@ class Board(BaseModel):
                 if block.orientation == "H":
                     is_target_cell_occupied = cells_occupancy[cell.y][cell.x + i]
                     if is_target_cell_occupied:
-                        raise Exception("The cell is already occupied.")
+                        raise Exception("Overlapped blocks are detected.")
                     cells_occupancy[cell.y][cell.x + i] = True
                 elif block.orientation == "V":
                     is_target_cell_occupied = cells_occupancy[cell.y + i][cell.x]
                     if is_target_cell_occupied:
-                        raise Exception("The cell is already occupied.")
+                        raise Exception("Overlapped blocks are detected.")
                     cells_occupancy[cell.y + i][cell.x] = True
 
         self.cells_occupancy = cells_occupancy
+
+    def _only_one_target_block(self) -> None:
+        if sum([position.block.is_target for position in self.positions]) == 0:
+            raise Exception("No target block is found.")
+        elif sum([position.block.is_target for position in self.positions]) >= 2:
+            raise Exception("Two or more target blocks are fonnd.")
 
     def display_board(self) -> None:
         if self.cells_occupancy is None:

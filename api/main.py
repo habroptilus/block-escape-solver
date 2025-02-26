@@ -102,17 +102,22 @@ app = FastAPI()
 async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks):
     # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
     # TODO: validate board
-    board = Board(
-        width=board_data.width,
-        height=board_data.height,
-        goal=Cell(**board_data.goal),
-        positions=PositionList(
-            positions=[
-                Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
-                for pos in board_data.positions
-            ]
-        ),
-    )
+    try:
+        board = Board(
+            width=board_data.width,
+            height=board_data.height,
+            goal=Cell(**board_data.goal),
+            positions=PositionList(
+                positions=[
+                    Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
+                    for pos in board_data.positions
+                ]
+            ),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid board was given. {str(e)}"
+        )
 
     print(board.positions)
 
@@ -120,7 +125,7 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
     solver = Solver()
     solution: list[Move] | None = solver.run(board)
     if solution is None:
-        raise HTTPException(status_code=400, detail="解答が生成できませんでした。")
+        raise HTTPException(status_code=400, detail="The problem can't be solved.")
 
     display_moves(solution)
 
