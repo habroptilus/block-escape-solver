@@ -153,7 +153,21 @@ const BlockPuzzle = () => {
   };
 
   return (
-    <div className="flex flex-col items-center">
+    <div className="flex flex-col items-center p-4">
+      {/* タイトル */}
+      <h1 className="text-2xl font-bold mb-2">ブロック脱出ゲームソルバー</h1>
+      
+      {/* 使い方 */}
+      <div className="text-gray-700 mb-4 text-center">
+        <ol className="list-decimal list-inside">
+          <li>配置したい種類のブロックを選択し、</li>
+          <li>配置したいマスを選ぶとブロックが置けます。</li>
+          <li>盤面が完成したらSolveボタンを押そう！</li>
+        </ol>
+      </div>
+
+  
+      {/* ブロック選択エリア */}
       <div className="flex gap-2 p-4 border overflow-x-auto max-w-full">
         {initialBlocks.map((block, index) => (
           <div
@@ -167,6 +181,8 @@ const BlockPuzzle = () => {
           ></div>
         ))}
       </div>
+  
+      {/* ゲームボード */}
       <canvas
         ref={canvasRef}
         width={BOARD_SIZE * BLOCK_SIZE}
@@ -174,12 +190,16 @@ const BlockPuzzle = () => {
         className="border bg-white mt-4"
         onClick={handleCellClick}
       ></canvas>
+      
+      {/* 操作ボタン */}
       <div className="mt-4 flex gap-4">
         <button onClick={handleUndo} className="px-4 py-2 bg-blue-500 text-white rounded">Undo</button>
         <button onClick={handleReset} className="px-4 py-2 bg-green-500 text-white rounded">Reset Board</button>
         <button onClick={handleSolve} className="px-4 py-2 bg-red-500 text-white rounded">Solve</button>
       </div>
-      {gifUrl && <img src={gifUrl} alt="Solution GIF" className="mt-4" />}
+      
+      {/* 解答GIF表示 */}
+      {gifUrl ? <img src={gifUrl} alt="Solution GIF" className="mt-4" /> : null}
     </div>
   );
 };
