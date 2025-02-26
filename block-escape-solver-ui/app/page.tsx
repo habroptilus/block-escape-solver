@@ -139,6 +139,12 @@ const BlockPuzzle = () => {
       body: JSON.stringify(jsonData),
     });
 
+    if (response.status === 400) {
+      console.error("Invalid board configuration: No possible solution.");
+      alert("解答生成に失敗しました: 盤面の配置が正しくない可能性があります。");
+      return;
+    }
+
     if (!response.ok) {
       console.error("Failed to get GIF");
       return;

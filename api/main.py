@@ -101,6 +101,7 @@ app = FastAPI()
 @app.post("/generate-gif")
 async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks):
     # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
+    # TODO: validate board
     board = Board(
         width=board_data.width,
         height=board_data.height,
@@ -112,13 +113,14 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
             ]
         ),
     )
+
     print(board.positions)
 
     board.display_board()
     solver = Solver()
     solution: list[Move] | None = solver.run(board)
     if solution is None:
-        raise HTTPException(status_code=404, detail="解答が生成できませんでした。")
+        raise HTTPException(status_code=400, detail="解答が生成できませんでした。")
 
     display_moves(solution)
 
@@ -130,7 +132,7 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
 
     # ファイルが存在するかチェック
     if not os.path.exists(output_filepath):
-        raise HTTPException(status_code=404, detail="GIFファイルが見つかりません")
+        raise HTTPException(status_code=400, detail="GIFファイルが見つかりません")
 
     background_tasks.add_task(_remove_file, output_filepath)
 
