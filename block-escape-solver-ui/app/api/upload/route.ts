@@ -1,19 +1,22 @@
 import { NextResponse } from "next/server";
 
+const EXTERNAL_API_URL = process.env.EXTERNAL_API_URL;
+
+if (!EXTERNAL_API_URL) {
+  throw new Error("EXTERNAL_API_URL is not defined in environment variables.");
+}
+
 export async function POST(request: Request) {
   try {
-    // クライアントから送られた JSON データを取得
     const jsonData = await request.json();
 
-    // 外部エンドポイント へ JSON を POST
-    const externalRes = await fetch("http://127.0.0.1:8000/generate-gif", {
+    const externalRes = await fetch(`${EXTERNAL_API_URL}/generate-gif`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(jsonData),
     });
 
     if (externalRes.status === 400) {
-      // 400エラーの場合は適切なメッセージを返す
       return NextResponse.json(
         { error: "Invalid board configuration: No possible solution." },
         { status: 400 }
@@ -21,14 +24,12 @@ export async function POST(request: Request) {
     }
 
     if (!externalRes.ok) {
-      // その他のエラー
       return NextResponse.json(
         { error: "Failed to generate GIF." },
         { status: externalRes.status }
       );
     }
 
-    // GIF ファイルのバイナリデータを取得
     const arrayBuffer = await externalRes.arrayBuffer();
     const headers = new Headers();
     headers.set("Content-Type", "image/gif");
