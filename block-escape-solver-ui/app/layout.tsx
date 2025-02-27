@@ -18,7 +18,7 @@ export const metadata: Metadata = {
   title: "ブロック脱出パズルソルバー",
   description: "無料のブロック脱出パズルゲームのソルバー。ボードにブロックを配置すると、最短手数の解答例が瞬時に算出されます。",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/hoge.png",
   },
 };
 
