@@ -2,8 +2,8 @@ import argparse
 import os
 from pathlib import Path
 
-from blog.upload_draft import upload_draft
-from blog.upload_image import upload_image
+from src_blog.upload_draft import upload_draft
+from src_blog.upload_image import upload_image
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Generate Solution GIF")

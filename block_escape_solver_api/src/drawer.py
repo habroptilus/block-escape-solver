@@ -2,7 +2,6 @@ import os
 import shutil
 from pathlib import Path
 
-import cv2
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
@@ -143,32 +142,23 @@ class GifDrawer:
             print("画像が見つかりません")
             return
 
-        # 1枚目の画像を読み込み、サイズを取得
-        first_frame = cv2.imread(image_path_list[0])
-        if first_frame is None:
-            print("最初の画像が読み込めません")
-            return
+        # MP4 (H.264) で保存
+        try:
+            writer = imageio.get_writer(
+                output_filepath, fps=self.fps, format="FFMPEG", codec="libx264"
+            )
 
-        height, width, _ = first_frame.shape
+            for image_path in image_path_list:
+                img = imageio.imread(image_path)
+                writer.append_data(img)
 
-        # MP4 (H.264) で保存する設定
-        fourcc = cv2.VideoWriter_fourcc(*"X264")  # H.264 (X264) コーデック
-        video = cv2.VideoWriter(output_filepath, fourcc, self.fps, (width, height))
+            writer.close()
+            print(f"動画を生成しました: {output_filepath}")
 
-        if not video.isOpened():
-            print("VideoWriter の初期化に失敗しました")
-            return
+        except Exception as e:
+            print(f"動画生成中にエラーが発生しました: {e}")
 
-        # 各画像をフレームとして追加
-        for image in image_path_list:
-            frame = cv2.imread(image)
-            if frame is None:
-                print(f"画像の読み込みに失敗: {image}")
-                continue
-            video.write(frame)
-
-        video.release()
-        print(f"動画を生成しました: {output_filepath}")
-
+        # 画像の削除（オプション）
         if not self.keep_images:
-            shutil.rmtree(self.image_dir)  # ディレクトリごと削除
+            image_dir = Path(image_path_list[0]).parent
+            shutil.rmtree(image_dir)

@@ -2,7 +2,7 @@ import json
 import tkinter as tk
 from tkinter import filedialog
 
-from src.block import Block, Cell, Position, PositionList
+from block_escape_solver_api.src.block import Block, Cell, Position, PositionList
 
 BLOCK_SIZE = 50
 BOARD_SIZE = 6

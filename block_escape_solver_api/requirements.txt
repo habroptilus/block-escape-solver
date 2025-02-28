@@ -2,5 +2,5 @@ fastapi
 uvicorn
 pydantic
 imageio
+imageio-ffmpeg
 matplotlib
-opencv-python

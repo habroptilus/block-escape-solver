@@ -1,9 +1,9 @@
 import argparse
 from pathlib import Path
 
-from src.block import Board, Cell, PositionList
-from src.drawer import GifDrawer
-from src.solver import Solver
+from block_escape_solver_api.src.block import Board, Cell, PositionList
+from block_escape_solver_api.src.drawer import GifDrawer
+from block_escape_solver_api.src.solver import Solver
 
 GRID_SIZE = 6
 

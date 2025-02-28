@@ -35,6 +35,8 @@ idna==3.10
     # via requests
 imageio==2.37.0
     # via block-escape-solver
+imageio-ffmpeg==0.6.0
+    # via block-escape-solver
 kiwisolver==1.4.8
     # via matplotlib
 matplotlib==3.10.0
@@ -43,9 +45,6 @@ numpy==2.2.3
     # via contourpy
     # via imageio
     # via matplotlib
-    # via opencv-python
-opencv-python==4.11.0.86
-    # via block-escape-solver
 packaging==24.2
     # via matplotlib
 pillow==11.1.0
