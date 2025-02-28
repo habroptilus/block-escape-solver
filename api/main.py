@@ -144,6 +144,8 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
 
     background_tasks.add_task(_remove_file, output_filepath)
 
+    # await asyncio.sleep(5)  # 5秒間スリープ
+
     # GIFファイルを返す
     return FileResponse(
         output_filepath,

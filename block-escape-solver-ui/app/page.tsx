@@ -114,7 +114,10 @@ const BlockPuzzle = () => {
     setBlocks([]);
   };
 
+  const [loading, setLoading] = useState(false);
+
   const handleSolve = async () => {
+    setLoading(true); // 計算開始時にローディング状態をON
     let idCounter = 0;
     const jsonData = {
       width: BOARD_SIZE,
@@ -130,33 +133,39 @@ const BlockPuzzle = () => {
         },
       })),
     };
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(jsonData),
-    });
-
-    if (response.status === 400) {
-      alert("解答生成に失敗しました: 盤面の配置が正しくない可能性があります。");
-      return;
+  
+    try {
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(jsonData),
+      });
+  
+      if (response.status === 400) {
+        alert("解答生成に失敗しました: 盤面の配置が正しくない可能性があります。");
+        return;
+      }
+  
+      if (!response.ok) {
+        return;
+      }
+  
+      const blob = await response.blob();
+      setGifUrl(URL.createObjectURL(blob));
+    } catch (error) {
+      console.error("エラー:", error);
+    } finally {
+      setLoading(false); // 処理が終わったらローディング状態をOFF
     }
-
-    if (!response.ok) {
-      return;
-    }
-
-    const blob = await response.blob();
-    setGifUrl(URL.createObjectURL(blob));
   };
-
+  
   return (
-    <div className="flex flex-col items-center p-4">
+    <div className="flex flex-col items-center p-4 relative">
       {/* タイトル */}
       <h1 className="text-2xl font-bold mb-2">ブロック脱出ゲームソルバー</h1>
-      
+  
       {/* 使い方 */}
       <div className="text-gray-700 mb-4 text-center">
         <ol className="list-decimal list-inside">
@@ -165,14 +174,15 @@ const BlockPuzzle = () => {
           <li>盤面が完成したらSolveボタンを押そう！</li>
         </ol>
       </div>
-
   
       {/* ブロック選択エリア */}
       <div className="flex gap-2 p-4 border overflow-x-auto max-w-full">
         {initialBlocks.map((block, index) => (
           <div
             key={index}
-            className={`relative cursor-pointer border border-black ${block.isTarget ? "bg-red-500" : "bg-gray-500"} ${selectedBlock === block ? "border-4 border-blue-500 shadow-lg shadow-blue-500/50 scale-110" : ""}`}
+            className={`relative cursor-pointer border border-black ${block.isTarget ? "bg-red-500" : "bg-gray-500"} ${
+              selectedBlock === block ? "border-4 border-blue-500 shadow-lg shadow-blue-500/50 scale-110" : ""
+            }`}
             onClick={() => handleBlockSelect(block)}
             style={{
               width: block.orientation === "H" ? block.length * BLOCK_SIZE : BLOCK_SIZE,
@@ -183,25 +193,41 @@ const BlockPuzzle = () => {
       </div>
   
       {/* ゲームボード */}
-      <canvas
-        ref={canvasRef}
-        width={BOARD_SIZE * BLOCK_SIZE}
-        height={BOARD_SIZE * BLOCK_SIZE}
-        className="border bg-white mt-4"
-        onClick={handleCellClick}
-      ></canvas>
-      
+      <div className="relative">
+        <canvas
+          ref={canvasRef}
+          width={BOARD_SIZE * BLOCK_SIZE}
+          height={BOARD_SIZE * BLOCK_SIZE}
+          className="border bg-white mt-4"
+          onClick={handleCellClick}
+        ></canvas>
+  
+        {/* ローディングオーバーレイ */}
+        {loading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center bg-black bg-opacity-60 text-white text-lg font-bold">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-white border-t-transparent"></div>
+            <p className="mt-4">Solving...</p>
+          </div>
+        )}
+      </div>
+  
       {/* 操作ボタン */}
       <div className="mt-4 flex gap-4">
         <button onClick={handleUndo} className="px-4 py-2 bg-blue-500 text-white rounded">Undo</button>
         <button onClick={handleReset} className="px-4 py-2 bg-green-500 text-white rounded">Reset Board</button>
-        <button onClick={handleSolve} className="px-4 py-2 bg-red-500 text-white rounded">Solve</button>
+        <button
+          onClick={handleSolve}
+          className={`px-4 py-2 text-white rounded ${loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-500"}`}
+          disabled={loading}
+        >
+          {loading ? "Solving.." : "Solve"}
+        </button>
       </div>
-      
+  
       {/* 解答GIF表示 */}
-      {gifUrl ? <img src={gifUrl} alt="Solution GIF" className="mt-4" /> : null}
+      {gifUrl && <img src={gifUrl} alt="Solution GIF" className="mt-4" />}
     </div>
-  );
+  );  
 };
 
 export default BlockPuzzle;
