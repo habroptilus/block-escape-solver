@@ -25,6 +25,46 @@ const initialBlocks: Block[] = [
   { orientation: "V", length: 3, isTarget: false },  
 ];
 
+
+const VideoComponent = ({ videoUrl }: { videoUrl: string }) => {
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+
+  useEffect(() => {
+    if (videoUrl && videoRef.current) {
+      setTimeout(() => {
+        const videoElement = videoRef.current;
+        if (!videoElement) return;
+
+        const rect = videoElement.getBoundingClientRect();
+        const scrollTop =
+          window.scrollY + rect.bottom - window.innerHeight + 50; // 余白50px
+
+        window.scrollTo({ top: scrollTop, behavior: "smooth" });
+      }, 100); // レンダリング待ち
+    }
+  }, [videoUrl]);
+
+  return (
+    <>
+      {videoUrl && (
+        <video
+          ref={videoRef}
+          key={videoUrl}
+          src={videoUrl}
+          controls
+          autoPlay
+          className="mt-4 w-full max-w-lg mx-auto block"
+        />
+      )}
+      {/* 確実に余白を確保 */}
+      <div style={{ height: "150px" }} />
+    </>
+  );
+};
+
+
+
+
 const BlockPuzzle = () => {
   const [blocks, setBlocks] = useState<Position[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
@@ -112,6 +152,7 @@ const BlockPuzzle = () => {
 
   const handleReset = () => {
     setBlocks([]);
+    setVideoUrl("");
   };
 
   const [loading, setLoading] = useState(false);
@@ -223,9 +264,7 @@ const BlockPuzzle = () => {
           {loading ? "Solving.." : "Solve"}
         </button>
       </div>
-      {videoUrl && (
-        <video key={videoUrl} src={videoUrl} controls autoPlay className="mt-4 w-full max-w-lg" />
-      )}
+      {videoUrl && <VideoComponent videoUrl={videoUrl} />}
     </div>
   );  
 };
