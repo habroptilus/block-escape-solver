@@ -3,3 +3,4 @@ uvicorn
 pydantic
 imageio
 matplotlib
+opencv-python

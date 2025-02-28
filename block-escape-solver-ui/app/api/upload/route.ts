@@ -10,7 +10,7 @@ export async function POST(request: Request) {
   try {
     const jsonData = await request.json();
 
-    const externalRes = await fetch(`${EXTERNAL_API_URL}/generate-gif`, {
+    const externalRes = await fetch(`${EXTERNAL_API_URL}/generate-mp4`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(jsonData),
@@ -25,16 +25,15 @@ export async function POST(request: Request) {
 
     if (!externalRes.ok) {
       return NextResponse.json(
-        { error: "Failed to generate GIF." },
+        { error: "Failed to generate video." },
         { status: externalRes.status }
       );
     }
 
-    const arrayBuffer = await externalRes.arrayBuffer();
     const headers = new Headers();
-    headers.set("Content-Type", "image/gif");
+    headers.set("Content-Type", "video/mp4");
 
-    return new NextResponse(Buffer.from(arrayBuffer), { headers });
+    return new NextResponse(externalRes.body, { headers });
   } catch (error) {
     console.error("Error in API route:", error);
     return NextResponse.json(

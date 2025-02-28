@@ -153,3 +153,60 @@ async def generate_gif(board_data: BoardModel, background_tasks: BackgroundTasks
         filename="result.gif",
         background=background_tasks,
     )
+
+
+@app.post("/generate-mp4")
+async def generate_mp4(board_data: BoardModel, background_tasks: BackgroundTasks):
+    # BoardクラスのインスタンスにAPIから受け取ったデータをマッピング
+    # TODO: validate board
+    try:
+        board = Board(
+            width=board_data.width,
+            height=board_data.height,
+            goal=Cell(**board_data.goal),
+            positions=PositionList(
+                positions=[
+                    Position(block=Block(**pos["block"]), cell=Cell(**pos["cell"]))
+                    for pos in board_data.positions
+                ]
+            ),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=400, detail=f"Invalid board was given. {str(e)}"
+        )
+
+    print(board.positions)
+
+    board.display_board()
+    solver = Solver()
+    solution: list[Move] | None = solver.run(board)
+    if solution is None:
+        raise HTTPException(status_code=400, detail="The problem can't be solved.")
+
+    display_moves(solution)
+
+    output_filepath = f"{TMP_DIR}/output.mp4"
+    drawer = GifDrawer(
+        grid_size=board_data.width,
+        image_dir=Path(f"{TMP_DIR}/images"),
+        keep_images=False,
+    )
+
+    drawer.generate_video(
+        board=board, solutions=solution, output_filepath=output_filepath
+    )
+
+    # ファイルが存在するかチェック
+    if not os.path.exists(output_filepath):
+        raise HTTPException(status_code=400, detail="MP4ファイルが見つかりません")
+
+    background_tasks.add_task(_remove_file, output_filepath)
+
+    # GIFファイルを返す
+    return FileResponse(
+        output_filepath,
+        media_type="video/mp4",
+        filename="result.mp4",
+        background=background_tasks,
+    )

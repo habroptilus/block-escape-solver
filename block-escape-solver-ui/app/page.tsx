@@ -28,7 +28,7 @@ const initialBlocks: Block[] = [
 const BlockPuzzle = () => {
   const [blocks, setBlocks] = useState<Position[]>([]);
   const [selectedBlock, setSelectedBlock] = useState<Block | null>(null);
-  const [gifUrl, setGifUrl] = useState<string | null>(null);
+  const [videoUrl, setVideoUrl] = useState<string | null>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
@@ -153,7 +153,8 @@ const BlockPuzzle = () => {
       }
   
       const blob = await response.blob();
-      setGifUrl(URL.createObjectURL(blob));
+      setVideoUrl(URL.createObjectURL(blob));
+      console.log("videoUrl:", videoUrl);
     } catch (error) {
       console.error("エラー:", error);
     } finally {
@@ -223,9 +224,9 @@ const BlockPuzzle = () => {
           {loading ? "Solving.." : "Solve"}
         </button>
       </div>
-  
-      {/* 解答GIF表示 */}
-      {gifUrl && <img src={gifUrl} alt="Solution GIF" className="mt-4" />}
+      {videoUrl && (
+        <video key={videoUrl} src={videoUrl} controls autoPlay className="mt-4 w-full max-w-lg" />
+      )}
     </div>
   );  
 };

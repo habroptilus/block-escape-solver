@@ -2,6 +2,7 @@ import os
 import shutil
 from pathlib import Path
 
+import cv2
 import imageio.v2 as imageio
 import matplotlib.pyplot as plt
 
@@ -9,10 +10,13 @@ from src.block import Block, Board, Move, PositionList
 
 
 class GifDrawer:
-    def __init__(self, grid_size: int, image_dir: Path, keep_images: bool):
+    def __init__(
+        self, grid_size: int, image_dir: Path, keep_images: bool, fps: int = 1
+    ):
         self.grid_size = grid_size
         self.image_dir = image_dir
         self.keep_images = keep_images
+        self.fps = fps
 
     def _get_color(self, block: Block) -> str:
         # ターゲットブロックは赤
@@ -95,6 +99,19 @@ class GifDrawer:
         return filepath
 
     def run(self, board: Board, solutions: list[Move], output_filepath: str):
+        image_path_list = self._save_images(board=board, solutions=solutions)
+        # GIFに変換
+        images = []
+        for image_filepath in image_path_list:
+            images.append(imageio.imread(image_filepath))
+
+        imageio.mimsave(output_filepath, images, fps=self.fps)
+        print(f"GIF saved as {output_filepath}")
+
+        if not self.keep_images:
+            shutil.rmtree(self.image_dir)  # ディレクトリごと削除
+
+    def _save_images(self, board: Board, solutions: list[Move]):
         total_steps = len(solutions)
         images = []
         os.makedirs(self.image_dir, exist_ok=True)
@@ -107,7 +124,7 @@ class GifDrawer:
                 filepath=self.image_dir / f"step_{step}.png",
                 next_move=move,
             )
-            images.append(imageio.imread(filepath))
+            images.append(filepath)
             board = board.apply_move(move)
 
         # Last step
@@ -117,11 +134,41 @@ class GifDrawer:
             total_steps,
             filepath=self.image_dir / f"step_{total_steps}.png",
         )
-        images.append(imageio.imread(filepath))
+        images.append(filepath)
+        return images
 
-        # GIFに変換
-        imageio.mimsave(output_filepath, images, fps=1)
-        print(f"GIF saved as {output_filepath}")
+    def generate_video(self, board: Board, solutions: list[Move], output_filepath: str):
+        image_path_list = self._save_images(board=board, solutions=solutions)
+        if not image_path_list:
+            print("画像が見つかりません")
+            return
+
+        # 1枚目の画像を読み込み、サイズを取得
+        first_frame = cv2.imread(image_path_list[0])
+        if first_frame is None:
+            print("最初の画像が読み込めません")
+            return
+
+        height, width, _ = first_frame.shape
+
+        # MP4 (H.264) で保存する設定
+        fourcc = cv2.VideoWriter_fourcc(*"X264")  # H.264 (X264) コーデック
+        video = cv2.VideoWriter(output_filepath, fourcc, self.fps, (width, height))
+
+        if not video.isOpened():
+            print("VideoWriter の初期化に失敗しました")
+            return
+
+        # 各画像をフレームとして追加
+        for image in image_path_list:
+            frame = cv2.imread(image)
+            if frame is None:
+                print(f"画像の読み込みに失敗: {image}")
+                continue
+            video.write(frame)
+
+        video.release()
+        print(f"動画を生成しました: {output_filepath}")
 
         if not self.keep_images:
             shutil.rmtree(self.image_dir)  # ディレクトリごと削除
