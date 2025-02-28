@@ -154,7 +154,6 @@ const BlockPuzzle = () => {
   
       const blob = await response.blob();
       setVideoUrl(URL.createObjectURL(blob));
-      console.log("videoUrl:", videoUrl);
     } catch (error) {
       console.error("エラー:", error);
     } finally {
