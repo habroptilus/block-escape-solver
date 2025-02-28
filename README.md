@@ -37,6 +37,7 @@ $ curl -X POST "http://127.0.0.1:8000/solve" \
 deploy api
 
 ```shell
+cd block_escape_solver_api
 vercel --prod
 ```
 
